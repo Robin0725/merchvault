@@ -51,6 +51,19 @@
   }
   .logo { font-size: 20px; font-weight: 800; letter-spacing: -.4px; }
   .logo span { color: var(--accent); }
+  .head-right { display: flex; align-items: center; gap: 10px; }
+  .lang-sel {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    max-width: 130px;
+  }
   .pro-pill {
     border: 1px solid var(--accent);
     color: var(--accent-dark);
@@ -60,6 +73,7 @@
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+    white-space: nowrap;
   }
   .pro-pill:hover { background: #e6dfff; }
   main { max-width: 1040px; margin: 0 auto; padding: 22px 20px 40px; }
@@ -102,6 +116,7 @@
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
+    white-space: nowrap;
   }
   .btn:hover { border-color: var(--accent); }
   .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -166,12 +181,16 @@
   .card .sr { font-size: 12.5px; color: var(--muted); }
   .card .row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; gap: 6px; }
   .card .price { font-weight: 800; font-size: 14px; }
-  .badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: capitalize; }
+  .badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
   .b-owned { background: #e3f6ec; color: var(--owned); }
   .b-transit { background: #fcf1d9; color: var(--transit); }
   .b-want { background: #fbe8f6; color: var(--want); }
-  .cat-tag { position: absolute; top: 8px; left: 8px; background: rgba(29,26,43,.72); color: #fff; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: capitalize; }
+  .cat-tag { position: absolute; top: 8px; left: 8px; background: rgba(29,26,43,.72); color: #fff; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
   .dup-flag { position: absolute; top: 8px; right: 8px; background: var(--danger); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
+
+  /* RTL flips for absolutely-positioned corner tags */
+  [dir=rtl] .cat-tag { left: auto; right: 8px; }
+  [dir=rtl] .dup-flag, [dir=rtl] .edit-hint { right: auto; left: 8px; }
 
   .empty { text-align: center; padding: 50px 20px; color: var(--muted); }
   .empty .big { font-size: 44px; margin-bottom: 8px; }
@@ -185,14 +204,12 @@
   .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .three { display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px; }
-  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; align-items: center; }
   .modal-actions .spacer { flex: 1; }
-  .photo-row { display: flex; align-items: center; gap: 10px; }
+  .photo-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .photo-prev { width: 56px; height: 56px; border-radius: 10px; background: var(--accent-soft) center/cover no-repeat; flex: none; display: flex; align-items: center; justify-content: center; color: #c9bdf5; }
   .link-btn { background: none; border: none; color: var(--accent-dark); font-size: 13px; cursor: pointer; padding: 0; font-weight: 600; font-family: inherit; }
-  .price-list { font-size: 13.5px; }
-  .price-list li { margin-bottom: 3px; }
-  .pro-list { margin: 12px 0; padding-left: 18px; font-size: 14px; }
+  .pro-list { margin: 12px 0; padding-inline-start: 18px; font-size: 14px; }
   .pro-list li { margin-bottom: 6px; }
   .price-big { color: var(--accent-dark); font-weight: 800; }
   .note { font-size: 12px; color: var(--muted); }
@@ -216,6 +233,7 @@
     .stats { grid-template-columns: repeat(2, 1fr); }
     .hero h1 { font-size: 23px; }
     .two, .three { grid-template-columns: 1fr; }
+    .lang-sel { max-width: 110px; }
   }
 </style>
 </head>
@@ -223,24 +241,27 @@
 
 <header>
   <div class="logo">Merch<span>Vault</span></div>
-  <button class="pro-pill" onclick="openPro()">✨ Pro — coming soon</button>
+  <div class="head-right">
+    <select class="lang-sel" id="langSel" aria-label="Language" onchange="onLangChange(this.value)"></select>
+    <button class="pro-pill" id="proPill" data-i18n="proPill" onclick="openPro()">✨ Pro — coming soon</button>
+  </div>
 </header>
 
 <main>
   <section class="hero">
-    <h1>Every piece of your collection, in one private vault.</h1>
-    <p>Figures, acrylic stands, can badges, keychains, photocards, ita-bag parts — log them all, track what you've spent, catch duplicates before you re-buy, and build a wishlist. Nothing leaves your device.</p>
-    <div class="tag">Track ALL your merch · yours forever · no account · no subscription</div>
+    <h1 data-i18n="heroH1">Every piece of your collection, in one private vault.</h1>
+    <p data-i18n="heroP">Figures, acrylic stands, can badges, keychains, photocards, ita-bag parts — log them all, track what you've spent, catch duplicates before you re-buy, and build a wishlist. Nothing leaves your device.</p>
+    <div class="tag" data-i18n="tag">Track ALL your merch · yours forever · no account · no subscription</div>
   </section>
 
   <section class="stats" id="stats"></section>
 
   <div class="toolbar">
-    <button class="btn primary" onclick="openAdd()">+ Add item</button>
-    <input class="search" type="text" id="search" placeholder="Search name, series, channel…" oninput="render()">
+    <button class="btn primary" data-i18n="addItem" onclick="openAdd()">+ Add item</button>
+    <input class="search" type="text" id="search" data-i18n-ph="searchPh" placeholder="Search name, series, channel…" oninput="render()">
     <div class="spacer"></div>
-    <button class="btn ghost" onclick="exportCSV()">↓ CSV</button>
-    <button class="btn ghost" onclick="exportShowcase()">🖼 Showcase</button>
+    <button class="btn ghost" data-i18n="csvBtn" onclick="exportCSV()">↓ CSV</button>
+    <button class="btn ghost" data-i18n="showcaseBtn" onclick="exportShowcase()">🖼 Showcase</button>
   </div>
 
   <div class="filters" id="filters"></div>
@@ -249,9 +270,9 @@
 </main>
 
 <footer>
-  <div>MerchVault keeps your whole collection on your own device — no upload, no account, no monthly fee. Your photos and data never touch a server.</div>
-  <div>© 2026 MerchVault · <a href="#" onclick="openPrivacy();return false;">Privacy</a> · <a href="mailto:florianfouine470@gmail.com">Contact</a></div>
-  <div class="fam">Part of a family of one-time-purchase tools:
+  <div data-i18n="footPrivacyNote">MerchVault keeps your whole collection on your own device — no upload, no account, no monthly fee. Your photos and data never touch a server.</div>
+  <div><span>© 2026 MerchVault · </span><a href="#" data-i18n="footPrivacyLink" onclick="openPrivacy();return false;">Privacy</a> · <a href="mailto:florianfouine470@gmail.com" data-i18n="footContact">Contact</a></div>
+  <div class="fam"><span data-i18n="footFamily">Part of a family of one-time-purchase tools:</span>
     <a href="https://fillsign.app">FillSign</a> ·
     <a href="https://robin0725.github.io/shotgloss/">ShotGloss</a> ·
     <a href="https://robin0725.github.io/foreverqr/">ForeverQR</a> ·
@@ -268,35 +289,26 @@
   <div class="modal">
     <h3 id="itemTitle">Add an item</h3>
     <div class="field">
-      <label>Name</label>
-      <input type="text" id="f-name" placeholder="e.g. Nendoroid Hatsune Miku">
+      <label data-i18n="fldName">Name</label>
+      <input type="text" id="f-name" data-i18n-ph="phName" placeholder="e.g. Nendoroid Hatsune Miku">
     </div>
     <div class="two">
       <div class="field">
-        <label>Series / IP</label>
-        <input type="text" id="f-series" placeholder="e.g. Vocaloid">
+        <label data-i18n="fldSeries">Series / IP</label>
+        <input type="text" id="f-series" data-i18n-ph="phSeries" placeholder="e.g. Vocaloid">
       </div>
       <div class="field">
-        <label>Category</label>
-        <select id="f-category">
-          <option value="figure">Figure</option>
-          <option value="acrylic">Acrylic stand</option>
-          <option value="badge">Can badge</option>
-          <option value="keychain">Keychain</option>
-          <option value="photocard">Photocard</option>
-          <option value="plush">Plush</option>
-          <option value="itabag">Ita-bag part</option>
-          <option value="other">Other</option>
-        </select>
+        <label data-i18n="fldCategory">Category</label>
+        <select id="f-category"></select>
       </div>
     </div>
     <div class="three">
       <div class="field">
-        <label>Price</label>
+        <label data-i18n="fldPrice">Price</label>
         <input type="number" id="f-price" placeholder="0.00" step="0.01" min="0">
       </div>
       <div class="field">
-        <label>Currency</label>
+        <label data-i18n="fldCurrency">Currency</label>
         <select id="f-currency">
           <option>USD</option><option>JPY</option><option>EUR</option><option>GBP</option>
           <option>CAD</option><option>AUD</option><option>CNY</option><option>KRW</option>
@@ -305,40 +317,36 @@
     </div>
     <div class="two">
       <div class="field">
-        <label>Status</label>
-        <select id="f-status">
-          <option value="owned">Owned</option>
-          <option value="transit">In transit</option>
-          <option value="want">Wishlist</option>
-        </select>
+        <label data-i18n="fldStatus">Status</label>
+        <select id="f-status"></select>
       </div>
       <div class="field">
-        <label>Bought / wanted on</label>
+        <label data-i18n="fldDate">Bought / wanted on</label>
         <input type="date" id="f-date">
       </div>
     </div>
     <div class="field">
-      <label>Where from (shop / event)</label>
-      <input type="text" id="f-channel" placeholder="e.g. AmiAmi, Mandarake, a con…">
+      <label data-i18n="fldChannel">Where from (shop / event)</label>
+      <input type="text" id="f-channel" data-i18n-ph="phChannel" placeholder="e.g. AmiAmi, Mandarake, a con…">
     </div>
     <div class="field">
-      <label>Notes</label>
-      <textarea id="f-notes" placeholder="Edition, condition, who to trade with…"></textarea>
+      <label data-i18n="fldNotes">Notes</label>
+      <textarea id="f-notes" data-i18n-ph="phNotes" placeholder="Edition, condition, who to trade with…"></textarea>
     </div>
     <div class="field">
-      <label>Photo (stays on your device)</label>
+      <label data-i18n="fldPhoto">Photo (stays on your device)</label>
       <div class="photo-row">
         <div class="photo-prev" id="f-photo-prev">🖼</div>
         <input type="file" id="f-photo" accept="image/*" style="display:none" onchange="onPhoto(event)">
-        <button class="btn ghost" type="button" onclick="document.getElementById('f-photo').click()">Choose photo</button>
-        <button class="link-btn" type="button" id="f-photo-clear" onclick="clearPhoto()" style="display:none">Remove</button>
+        <button class="btn ghost" type="button" data-i18n="choosePhoto" onclick="document.getElementById('f-photo').click()">Choose photo</button>
+        <button class="link-btn" type="button" id="f-photo-clear" data-i18n="removePhoto" onclick="clearPhoto()" style="display:none">Remove</button>
       </div>
     </div>
     <div class="modal-actions">
-      <button class="link-btn" id="f-delete" onclick="deleteItem()" style="display:none; color:var(--danger)">Delete</button>
+      <button class="link-btn" id="f-delete" data-i18n="del" onclick="deleteItem()" style="display:none; color:var(--danger)">Delete</button>
       <div class="spacer"></div>
-      <button class="btn ghost" onclick="closeItem()">Cancel</button>
-      <button class="btn primary" onclick="saveItem()">Save</button>
+      <button class="btn ghost" data-i18n="cancel" onclick="closeItem()">Cancel</button>
+      <button class="btn primary" data-i18n="save" onclick="saveItem()">Save</button>
     </div>
   </div>
 </div>
@@ -346,19 +354,19 @@
 <!-- Pro fake door -->
 <div class="modal-bg" id="proModal" onclick="if(event.target===this)closePro()">
   <div class="modal">
-    <h3>✨ MerchVault Pro — <span class="price-big">$9, one-time, yours forever</span></h3>
-    <p class="note">Everything you see now is free and stays free. Pro adds:</p>
+    <h3><span data-i18n="proTitlePrefix">✨ MerchVault Pro —</span> <span class="price-big" data-i18n="proPrice">$9, one-time, yours forever</span></h3>
+    <p class="note" data-i18n="proIntro">Everything you see now is free and stays free. Pro adds:</p>
     <ul class="pro-list">
-      <li>Unlimited items (free covers your first 60)</li>
-      <li>Beautiful, customizable showcase images for socials</li>
-      <li>Bulk import from a spreadsheet (CSV)</li>
-      <li>Backup &amp; restore your whole vault as one file</li>
+      <li data-i18n="proLi1">Unlimited items (free covers your first 60)</li>
+      <li data-i18n="proLi2">Beautiful, customizable showcase images for socials</li>
+      <li data-i18n="proLi3">Bulk import from a spreadsheet (CSV)</li>
+      <li data-i18n="proLi4">Backup &amp; restore your whole vault as one file</li>
     </ul>
-    <p class="note">One payment, no subscription, ever. Want it? Tap below and we'll email you the moment it's live.</p>
+    <p class="note" data-i18n="proOutro">One payment, no subscription, ever. Want it? Tap below and we'll email you the moment it's live.</p>
     <div class="modal-actions">
       <div class="spacer"></div>
-      <button class="btn ghost" onclick="closePro()">Maybe later</button>
-      <button class="btn primary" onclick="notifyPro()">Notify me</button>
+      <button class="btn ghost" data-i18n="proLater" onclick="closePro()">Maybe later</button>
+      <button class="btn primary" data-i18n="proNotify" onclick="notifyPro()">Notify me</button>
     </div>
   </div>
 </div>
@@ -366,18 +374,175 @@
 <!-- Privacy -->
 <div class="modal-bg" id="privacyModal" onclick="if(event.target===this)closePrivacy()">
   <div class="modal">
-    <h3>Privacy — the short version</h3>
-    <p style="font-size:14px">MerchVault runs entirely in your browser. Your collection — every detail and every photo — is saved <strong>only on this device</strong> (in your browser's local storage). It is never uploaded, we have no account system, and we never see your data.</p>
-    <p style="font-size:14px">That also means: if you clear your browser data or switch devices, your collection doesn't follow automatically. Use <strong>↓ CSV</strong> to keep your own backup.</p>
-    <p class="note">We use a privacy-friendly visit counter (GoatCounter) that records page views without cookies or personal data.</p>
-    <div class="modal-actions"><div class="spacer"></div><button class="btn primary" onclick="closePrivacy()">Got it</button></div>
+    <h3 data-i18n="privTitle">Privacy — the short version</h3>
+    <p style="font-size:14px" data-i18n="privP1">MerchVault runs entirely in your browser. Your collection — every detail and every photo — is saved only on this device. It is never uploaded, we have no account system, and we never see your data.</p>
+    <p style="font-size:14px" data-i18n="privP2">That also means: if you clear your browser data or switch devices, your collection doesn't follow automatically. Use the CSV export to keep your own backup.</p>
+    <p class="note" data-i18n="privP3">We use a privacy-friendly visit counter (GoatCounter) that records page views without cookies or personal data.</p>
+    <div class="modal-actions"><div class="spacer"></div><button class="btn primary" data-i18n="gotIt" onclick="closePrivacy()">Got it</button></div>
   </div>
 </div>
 
 <script>
+  /* ============ i18n core (English pack inline; others lazy-loaded from lang/<code>.js) ============ */
+  window.MV_LANG = window.MV_LANG || {};
+  MV_LANG.en = {
+    pageTitle: 'MerchVault — Track Your Anime & Goods Collection, Yours Forever',
+    proPill: '✨ Pro — coming soon',
+    heroH1: 'Every piece of your collection, in one private vault.',
+    heroP: "Figures, acrylic stands, can badges, keychains, photocards, ita-bag parts — log them all, track what you've spent, catch duplicates before you re-buy, and build a wishlist. Nothing leaves your device.",
+    tag: 'Track ALL your merch · yours forever · no account · no subscription',
+    addItem: '+ Add item',
+    searchPh: 'Search name, series, channel…',
+    csvBtn: '↓ CSV',
+    showcaseBtn: '🖼 Showcase',
+    statOwned: 'Items owned',
+    statSpent: 'Total spent',
+    statWishlist: 'Wishlist',
+    statTopCat: 'Top category',
+    dupWord: 'dup',
+    fAll: 'All',
+    fAllTypes: 'All types',
+    st: { owned: 'Owned', transit: 'In transit', want: 'Wishlist' },
+    cat: { figure: 'Figure', acrylic: 'Acrylic', badge: 'Badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag', other: 'Other' },
+    catSel: { figure: 'Figure', acrylic: 'Acrylic stand', badge: 'Can badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag part', other: 'Other' },
+    emptyTitle: 'Your vault is empty. Add your first piece to get started.',
+    noMatch: 'Nothing matches that filter.',
+    untitled: '(untitled)',
+    editHint: 'Edit',
+    modalAdd: 'Add an item',
+    modalEdit: 'Edit item',
+    fldName: 'Name',
+    phName: 'e.g. Nendoroid Hatsune Miku',
+    fldSeries: 'Series / IP',
+    phSeries: 'e.g. Vocaloid',
+    fldCategory: 'Category',
+    fldPrice: 'Price',
+    fldCurrency: 'Currency',
+    fldStatus: 'Status',
+    fldDate: 'Bought / wanted on',
+    fldChannel: 'Where from (shop / event)',
+    phChannel: 'e.g. AmiAmi, Mandarake, a con…',
+    fldNotes: 'Notes',
+    phNotes: 'Edition, condition, who to trade with…',
+    fldPhoto: 'Photo (stays on your device)',
+    choosePhoto: 'Choose photo',
+    removePhoto: 'Remove',
+    del: 'Delete',
+    cancel: 'Cancel',
+    save: 'Save',
+    confirmDelete: 'Remove this item from your vault?',
+    proTitlePrefix: '✨ MerchVault Pro —',
+    proPrice: '$9, one-time, yours forever',
+    proIntro: 'Everything you see now is free and stays free. Pro adds:',
+    proLi1: 'Unlimited items (free covers your first 60)',
+    proLi2: 'Beautiful, customizable showcase images for socials',
+    proLi3: 'Bulk import from a spreadsheet (CSV)',
+    proLi4: 'Backup & restore your whole vault as one file',
+    proOutro: "One payment, no subscription, ever. Want it? Tap below and we'll email you the moment it's live.",
+    proLater: 'Maybe later',
+    proNotify: 'Notify me',
+    proThanks: "You're on the list — we'll email you the moment Pro is live. Thanks for the vote of confidence! 💜",
+    privTitle: 'Privacy — the short version',
+    privP1: 'MerchVault runs entirely in your browser. Your collection — every detail and every photo — is saved only on this device. It is never uploaded, we have no account system, and we never see your data.',
+    privP2: "That also means: if you clear your browser data or switch devices, your collection doesn't follow automatically. Use the CSV export to keep your own backup.",
+    privP3: 'We use a privacy-friendly visit counter (GoatCounter) that records page views without cookies or personal data.',
+    gotIt: 'Got it',
+    footPrivacyNote: 'MerchVault keeps your whole collection on your own device — no upload, no account, no monthly fee. Your photos and data never touch a server.',
+    footPrivacyLink: 'Privacy',
+    footContact: 'Contact',
+    footFamily: 'Part of a family of one-time-purchase tools:',
+    scTitle: 'My Collection',
+    scItems: '{n} items',
+    addFirst: 'Add some items first.'
+  };
+
+  var LANGS = [
+    ['en', 'English'], ['zh-CN', '简体中文'], ['ja', '日本語'], ['ko', '한국어'],
+    ['es', 'Español'], ['pt-BR', 'Português'], ['fr', 'Français'], ['de', 'Deutsch'],
+    ['ru', 'Русский'], ['tr', 'Türkçe'], ['ar', 'العربية'], ['id', 'Bahasa Indonesia'],
+    ['hi', 'हिन्दी'], ['vi', 'Tiếng Việt'], ['th', 'ไทย']
+  ];
+  var SUPPORTED = {}; LANGS.forEach(function (l) { SUPPORTED[l[0]] = true; });
+  var RTL = { ar: true };
+  var LANG_KEY = 'merchvault_lang';
+  var CUR_LANG = 'en';
+  var L = MV_LANG.en;
+
+  function t(k) { return (L && L[k] != null) ? L[k] : MV_LANG.en[k]; }
+  function catShort(k) { return (L.cat && L.cat[k]) || MV_LANG.en.cat[k] || k; }
+  function catLong(k) { return (L.catSel && L.catSel[k]) || MV_LANG.en.catSel[k] || k; }
+  function stLabel(k) { return (L.st && L.st[k]) || MV_LANG.en.st[k] || k; }
+
+  function resolveLang() {
+    var saved = null;
+    try { saved = localStorage.getItem(LANG_KEY); } catch (e) {}
+    if (saved && SUPPORTED[saved]) return saved;
+    var cands = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || 'en'];
+    for (var i = 0; i < cands.length; i++) {
+      var c = cands[i]; if (!c) continue;
+      if (SUPPORTED[c]) return c;
+      var base = c.toLowerCase().split('-')[0];
+      if (base === 'zh') return 'zh-CN';
+      if (base === 'pt') return 'pt-BR';
+      for (var j = 0; j < LANGS.length; j++) { if (LANGS[j][0].split('-')[0] === base) return LANGS[j][0]; }
+    }
+    return 'en';
+  }
+
+  function ensureLang(code, cb) {
+    if (code === 'en' || MV_LANG[code]) { cb(); return; }
+    var s = document.createElement('script');
+    s.src = 'lang/' + code + '.js';
+    s.async = true;
+    s.onload = function () { cb(); };
+    s.onerror = function () { cb(); }; /* fall back to en per-key */
+    document.head.appendChild(s);
+  }
+
+  function onLangChange(code) {
+    if (!SUPPORTED[code]) code = 'en';
+    CUR_LANG = code;
+    try { localStorage.setItem(LANG_KEY, code); } catch (e) {}
+    ensureLang(code, function () {
+      L = MV_LANG[code] || MV_LANG.en;
+      applyLang();
+    });
+  }
+
+  function buildLangSel() {
+    var sel = document.getElementById('langSel');
+    sel.innerHTML = LANGS.map(function (l) { return '<option value="' + l[0] + '">' + l[1] + '</option>'; }).join('');
+    sel.value = CUR_LANG;
+  }
+
+  function fillSelectFrom(id, keys, labelFn) {
+    var sel = document.getElementById(id);
+    var cur = sel.value;
+    sel.innerHTML = keys.map(function (k) { return '<option value="' + k + '">' + labelFn(k) + '</option>'; }).join('');
+    if (cur) sel.value = cur;
+  }
+
+  function applyLang() {
+    document.documentElement.lang = CUR_LANG;
+    document.documentElement.dir = RTL[CUR_LANG] ? 'rtl' : 'ltr';
+    document.title = t('pageTitle');
+    document.getElementById('langSel').value = CUR_LANG;
+    // static nodes
+    var nodes = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < nodes.length; i++) { nodes[i].textContent = t(nodes[i].getAttribute('data-i18n')); }
+    var phs = document.querySelectorAll('[data-i18n-ph]');
+    for (var j = 0; j < phs.length; j++) { phs[j].setAttribute('placeholder', t(phs[j].getAttribute('data-i18n-ph'))); }
+    // selects
+    fillSelectFrom('f-category', CATS, catLong);
+    fillSelectFrom('f-status', ['owned', 'transit', 'want'], stLabel);
+    // dynamic
+    render();
+  }
+
+  /* ============ app ============ */
   var KEY = 'merchvault_items';
   var FREE_CAP = 60;
-  var CAT_LABELS = { figure:'Figure', acrylic:'Acrylic', badge:'Badge', keychain:'Keychain', photocard:'Photocard', plush:'Plush', itabag:'Ita-bag', other:'Other' };
+  var CATS = ['figure', 'acrylic', 'badge', 'keychain', 'photocard', 'plush', 'itabag', 'other'];
   var CAT_ICON = { figure:'🧍', acrylic:'🪧', badge:'🔘', keychain:'🔑', photocard:'🃏', plush:'🧸', itabag:'🎒', other:'📦' };
   var items = load();
   var editingId = null;
@@ -394,7 +559,7 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
   function fmtMoney(n, ccy) {
     var v = Number(n) || 0;
-    try { return new Intl.NumberFormat('en', { style:'currency', currency: ccy || 'USD', maximumFractionDigits: (ccy==='JPY'||ccy==='KRW')?0:2 }).format(v); }
+    try { return new Intl.NumberFormat(CUR_LANG, { style:'currency', currency: ccy || 'USD', maximumFractionDigits: (ccy==='JPY'||ccy==='KRW')?0:2 }).format(v); }
     catch (e) { return (ccy||'USD') + ' ' + v.toFixed(2); }
   }
 
@@ -414,40 +579,37 @@
   function renderStats() {
     var owned = items.filter(function (i) { return i.status !== 'want'; });
     var want = items.filter(function (i) { return i.status === 'want'; });
-    // total spend grouped by currency, only for owned/in-transit
     var byCcy = {};
     owned.forEach(function (i) { var c = i.currency || 'USD'; byCcy[c] = (byCcy[c] || 0) + (Number(i.price) || 0); });
     var spendStr = Object.keys(byCcy).length
       ? Object.keys(byCcy).map(function (c) { return fmtMoney(byCcy[c], c); }).join(' · ')
       : '—';
-    // top category
     var catCount = {};
     items.forEach(function (i) { var c = i.category || 'other'; catCount[c] = (catCount[c]||0)+1; });
-    var topCat = '—';
-    var max = 0;
-    Object.keys(catCount).forEach(function (c) { if (catCount[c] > max) { max = catCount[c]; topCat = CAT_LABELS[c] || c; } });
+    var topCat = '—', max = 0;
+    Object.keys(catCount).forEach(function (c) { if (catCount[c] > max) { max = catCount[c]; topCat = catShort(c); } });
     var dups = Object.keys(dupSet()).length;
 
     var html = '';
-    html += stat('Items owned', owned.length + (dups ? ' <small>· ' + dups + ' dup' + (dups>1?'s':'') + '</small>' : ''));
-    html += stat('Total spent', '<span style="font-size:18px">' + spendStr + '</span>');
-    html += stat('Wishlist', want.length);
-    html += stat('Top category', topCat);
+    html += stat(t('statOwned'), owned.length + (dups ? ' <small>· ' + dups + ' ' + esc(t('dupWord')) + '</small>' : ''));
+    html += stat(t('statSpent'), '<span style="font-size:18px">' + spendStr + '</span>');
+    html += stat(t('statWishlist'), want.length);
+    html += stat(t('statTopCat'), topCat);
     document.getElementById('stats').innerHTML = html;
   }
   function stat(k, v) { return '<div class="stat"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>'; }
 
   /* ---------- filters ---------- */
   function renderFilters() {
-    var sts = [['all','All'],['owned','Owned'],['transit','In transit'],['want','Wishlist']];
+    var sts = [['all', t('fAll')], ['owned', stLabel('owned')], ['transit', stLabel('transit')], ['want', stLabel('want')]];
     var html = sts.map(function (s) {
-      return '<span class="chip ' + (filterStatus===s[0]?'on':'') + '" onclick="setStatus(\'' + s[0] + '\')">' + s[1] + '</span>';
+      return '<span class="chip ' + (filterStatus===s[0]?'on':'') + '" onclick="setStatus(\'' + s[0] + '\')">' + esc(s[1]) + '</span>';
     }).join('');
     html += '<span style="width:8px"></span>';
-    var cats = ['all'].concat(Object.keys(CAT_LABELS));
+    var cats = ['all'].concat(CATS);
     html += cats.map(function (c) {
-      var label = c === 'all' ? 'All types' : CAT_LABELS[c];
-      return '<span class="chip ' + (filterCat===c?'on':'') + '" onclick="setCat(\'' + c + '\')">' + label + '</span>';
+      var label = c === 'all' ? t('fAllTypes') : catShort(c);
+      return '<span class="chip ' + (filterCat===c?'on':'') + '" onclick="setCat(\'' + c + '\')">' + esc(label) + '</span>';
     }).join('');
     document.getElementById('filters').innerHTML = html;
   }
@@ -471,33 +633,32 @@
     });
     var el = document.getElementById('collection');
     if (!items.length) {
-      el.innerHTML = '<div class="empty"><div class="big">📦</div><div>Your vault is empty. Add your first piece to get started.</div><div style="margin-top:14px"><button class="btn primary" onclick="openAdd()">+ Add item</button></div></div>';
+      el.innerHTML = '<div class="empty"><div class="big">📦</div><div>' + esc(t('emptyTitle')) + '</div><div style="margin-top:14px"><button class="btn primary" onclick="openAdd()">' + esc(t('addItem')) + '</button></div></div>';
       return;
     }
     if (!list.length) {
-      el.innerHTML = '<div class="empty"><div class="big">🔍</div><div>Nothing matches that filter.</div></div>';
+      el.innerHTML = '<div class="empty"><div class="big">🔍</div><div>' + esc(t('noMatch')) + '</div></div>';
       return;
     }
     var html = '<div class="grid">';
     list.forEach(function (i) {
       var st = i.status || 'owned';
       var bcls = st === 'owned' ? 'b-owned' : (st === 'transit' ? 'b-transit' : 'b-want');
-      var blabel = st === 'owned' ? 'owned' : (st === 'transit' ? 'in transit' : 'wishlist');
       var thumb = i.photo
         ? '<div class="thumb" style="background-image:url(' + i.photo + ')"></div>'
         : '<div class="thumb">' + (CAT_ICON[i.category] || '📦') + '</div>';
       var priceStr = (st === 'want')
-        ? '<span class="price" style="color:var(--want)">' + (Number(i.price) ? fmtMoney(i.price, i.currency) : 'wishlist') + '</span>'
+        ? '<span class="price" style="color:var(--want)">' + (Number(i.price) ? fmtMoney(i.price, i.currency) : esc(stLabel('want'))) + '</span>'
         : '<span class="price">' + (Number(i.price) ? fmtMoney(i.price, i.currency) : '—') + '</span>';
-      var isDup = dups[dupKey(i)] ? '<div class="dup-flag">DUP</div>' : '';
+      var isDup = dups[dupKey(i)] ? '<div class="dup-flag">' + esc(t('dupWord').toUpperCase()) + '</div>' : '';
       html += '<div class="card" onclick="openEdit(\'' + i.id + '\')">'
         + thumb
-        + '<div class="cat-tag">' + (CAT_LABELS[i.category] || 'Other') + '</div>'
-        + (isDup || '<div class="edit-hint">Edit</div>')
+        + '<div class="cat-tag">' + esc(catShort(i.category || 'other')) + '</div>'
+        + (isDup || '<div class="edit-hint">' + esc(t('editHint')) + '</div>')
         + '<div class="body">'
-        + '<div class="nm">' + esc(i.name || '(untitled)') + '</div>'
+        + '<div class="nm">' + esc(i.name || t('untitled')) + '</div>'
         + (i.series ? '<div class="sr">' + esc(i.series) + '</div>' : '<div class="sr">&nbsp;</div>')
-        + '<div class="row">' + priceStr + '<span class="badge ' + bcls + '">' + blabel + '</span></div>'
+        + '<div class="row">' + priceStr + '<span class="badge ' + bcls + '">' + esc(stLabel(st)) + '</span></div>'
         + '</div>'
         + '</div>';
     });
@@ -509,7 +670,7 @@
   function openAdd() {
     if (items.length >= FREE_CAP) { openPro(); return; }
     editingId = null; pendingPhoto = null;
-    document.getElementById('itemTitle').textContent = 'Add an item';
+    document.getElementById('itemTitle').textContent = t('modalAdd');
     document.getElementById('f-name').value = '';
     document.getElementById('f-series').value = '';
     document.getElementById('f-category').value = 'figure';
@@ -528,7 +689,7 @@
     var it = items.filter(function (x) { return x.id === id; })[0];
     if (!it) return;
     editingId = id; pendingPhoto = it.photo || null;
-    document.getElementById('itemTitle').textContent = 'Edit item';
+    document.getElementById('itemTitle').textContent = t('modalEdit');
     document.getElementById('f-name').value = it.name || '';
     document.getElementById('f-series').value = it.series || '';
     document.getElementById('f-category').value = it.category || 'other';
@@ -558,16 +719,13 @@
       photo: pendingPhoto || null
     };
     if (!obj.name) { document.getElementById('f-name').focus(); return; }
-    if (editingId) {
-      items = items.map(function (x) { return x.id === editingId ? obj : x; });
-    } else {
-      items.unshift(obj);
-    }
+    if (editingId) { items = items.map(function (x) { return x.id === editingId ? obj : x; }); }
+    else { items.unshift(obj); }
     save(); closeItem(); render();
   }
   function deleteItem() {
     if (!editingId) return;
-    if (!confirm('Remove this item from your vault?')) return;
+    if (!confirm(t('confirmDelete'))) return;
     items = items.filter(function (x) { return x.id !== editingId; });
     save(); closeItem(); render();
   }
@@ -580,8 +738,7 @@
     reader.onload = function (e) {
       var img = new Image();
       img.onload = function () {
-        var max = 420;
-        var w = img.width, h = img.height;
+        var max = 420, w = img.width, h = img.height;
         if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
         else if (h > max) { w = Math.round(w * max / h); h = max; }
         var c = document.createElement('canvas');
@@ -604,7 +761,7 @@
 
   /* ---------- CSV export ---------- */
   function exportCSV() {
-    if (!items.length) { alert('Add some items first.'); return; }
+    if (!items.length) { alert(t('addFirst')); return; }
     var cols = ['name','series','category','price','currency','status','date','channel','notes'];
     var head = cols.join(',');
     var rows = items.map(function (i) {
@@ -620,29 +777,27 @@
 
   /* ---------- showcase PNG ---------- */
   function exportShowcase() {
-    if (!items.length) { alert('Add some items first.'); return; }
+    if (!items.length) { alert(t('addFirst')); return; }
     var owned = items.filter(function (i) { return i.status !== 'want'; });
     var pics = items.filter(function (i) { return i.photo; }).slice(0, 12);
     var W = 1200, H = 675;
     var c = document.createElement('canvas');
     c.width = W; c.height = H;
     var ctx = c.getContext('2d');
-    // background
     var g = ctx.createLinearGradient(0, 0, W, H);
     g.addColorStop(0, '#7c5cff'); g.addColorStop(1, '#5b3fd6');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = 'rgba(255,255,255,.10)'; ctx.fillRect(0, 0, W, 150);
-    // title
     ctx.fillStyle = '#fff';
     ctx.font = '800 52px -apple-system, Segoe UI, Roboto, sans-serif';
-    ctx.fillText('My Collection', 60, 95);
+    ctx.fillText(t('scTitle'), 60, 95);
     ctx.font = '600 24px -apple-system, Segoe UI, Roboto, sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,.85)';
     var byCcy = {};
     owned.forEach(function (i) { var cc = i.currency || 'USD'; byCcy[cc] = (byCcy[cc]||0) + (Number(i.price)||0); });
     var spend = Object.keys(byCcy).map(function (cc) { return fmtMoney(byCcy[cc], cc); }).join('  ·  ') || '';
-    ctx.fillText(owned.length + ' items' + (spend ? '   ·   ' + spend : ''), 62, 130);
-    // photo grid
+    var itemsLine = t('scItems').replace('{n}', owned.length);
+    ctx.fillText(itemsLine + (spend ? '   ·   ' + spend : ''), 62, 130);
     var loaded = 0, total = pics.length;
     function drawCell(i, imgEl) {
       var cols = 6, rows = 2, pad = 18, gx = 60, gy = 185;
@@ -693,14 +848,20 @@
   function notifyPro() {
     if (window.goatcounter && goatcounter.count) goatcounter.count({ path: 'pro-notify-click', event: true });
     closePro();
-    alert("You're on the list — we'll email you the moment Pro is live. Thanks for the vote of confidence! 💜");
+    alert(t('proThanks'));
   }
   function openPrivacy() { document.getElementById('privacyModal').classList.add('show'); }
   function closePrivacy() { document.getElementById('privacyModal').classList.remove('show'); }
 
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeItem(); closePro(); closePrivacy(); } });
 
-  render();
+  /* ---------- boot ---------- */
+  CUR_LANG = resolveLang();
+  buildLangSel();
+  ensureLang(CUR_LANG, function () {
+    L = MV_LANG[CUR_LANG] || MV_LANG.en;
+    applyLang();
+  });
 </script>
 
 <script>
@@ -711,4 +872,3 @@
 </body>
 </html>
 </content>
-</invoke>
