@@ -401,6 +401,7 @@
         <div class="photo-prev" id="f-photo-prev">🖼</div>
         <input type="file" id="f-photo" accept="image/*" style="display:none" onchange="onPhoto(event)">
         <button class="btn ghost" type="button" data-i18n="choosePhoto" onclick="document.getElementById('f-photo').click()">Choose photo</button>
+        <button class="btn ghost" type="button" id="f-bg" data-i18n="removeBg" onclick="removeBg()" style="display:none">✨ Remove background</button>
         <button class="link-btn" type="button" id="f-photo-clear" data-i18n="removePhoto" onclick="clearPhoto()" style="display:none">Remove</button>
       </div>
     </div>
@@ -471,6 +472,9 @@
     featuredLabel: 'Pride of the collection',
     makeFeatured: 'Set as centerpiece',
     galleryNamePrompt: 'Name your collection',
+    removeBg: '✨ Remove background',
+    removingBg: 'Removing background… (first time downloads a one-time model)',
+    bgFailed: "Couldn't remove the background — keeping your original.",
     st: { owned: 'Owned', transit: 'In transit', want: 'Wishlist' },
     cat: { figure: 'Figure', acrylic: 'Acrylic', badge: 'Badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag', other: 'Other' },
     catSel: { figure: 'Figure', acrylic: 'Acrylic stand', badge: 'Can badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag part', other: 'Other' },
@@ -884,10 +888,42 @@
   function setPhotoPreview(data) {
     var prev = document.getElementById('f-photo-prev');
     var clr = document.getElementById('f-photo-clear');
-    if (data) { prev.style.backgroundImage = 'url(' + data + ')'; prev.textContent = ''; clr.style.display = 'inline'; }
-    else { prev.style.backgroundImage = 'none'; prev.textContent = '🖼'; clr.style.display = 'none'; }
+    var bg = document.getElementById('f-bg');
+    if (data) { prev.style.backgroundImage = 'url(' + data + ')'; prev.textContent = ''; clr.style.display = 'inline'; bg.style.display = 'inline'; }
+    else { prev.style.backgroundImage = 'none'; prev.textContent = '🖼'; clr.style.display = 'none'; bg.style.display = 'none'; }
   }
   function clearPhoto() { pendingPhoto = null; setPhotoPreview(null); }
+
+  /* ---------- AI background removal (runs fully in-browser; the photo never leaves the device) ---------- */
+  var bgBusy = false;
+  function removeBg() {
+    if (!pendingPhoto || bgBusy) return;
+    bgBusy = true;
+    var btn = document.getElementById('f-bg');
+    var src = pendingPhoto;
+    btn.disabled = true; btn.textContent = t('removingBg');
+    import('https://esm.sh/@imgly/background-removal@1.5.8').then(function (mod) {
+      var fn = mod.removeBackground || (mod.default && mod.default.removeBackground) || mod.default;
+      if (typeof fn !== 'function') throw new Error('lib');
+      return fn(src, { model: 'isnet_quint8', output: { format: 'image/png' } });
+    }).then(function (blob) {
+      return new Promise(function (res, rej) {
+        var fr = new FileReader();
+        fr.onload = function () { res(fr.result); };
+        fr.onerror = rej;
+        fr.readAsDataURL(blob);
+      });
+    }).then(function (dataUrl) {
+      pendingPhoto = dataUrl;
+      setPhotoPreview(dataUrl);
+    }).catch(function () {
+      alert(t('bgFailed'));
+    }).then(function () {
+      bgBusy = false;
+      btn.disabled = false;
+      btn.textContent = t('removeBg');
+    });
+  }
 
   /* ---------- CSV export ---------- */
   function exportCSV() {
