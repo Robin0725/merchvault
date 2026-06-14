@@ -361,9 +361,11 @@
 
   /* sticker stroke around cut-outs — hides the mask's jagged fringe + reads as an exhibit edge */
   .cut {
+    --sc: #fff7ec;   /* stroke color — overridable inline per item */
+    --sw: 1.8px;     /* stroke width — overridable inline per item */
     filter:
-      drop-shadow(1.6px 0 0 #fff7ec) drop-shadow(-1.6px 0 0 #fff7ec)
-      drop-shadow(0 1.6px 0 #fff7ec) drop-shadow(0 -1.6px 0 #fff7ec)
+      drop-shadow(var(--sw) 0 0 var(--sc)) drop-shadow(calc(-1 * var(--sw)) 0 0 var(--sc))
+      drop-shadow(0 var(--sw) 0 var(--sc)) drop-shadow(0 calc(-1 * var(--sw)) 0 var(--sc))
       drop-shadow(0 8px 14px rgba(0,0,0,.42))
       drop-shadow(0 0 12px rgba(255,200,140,.42));
   }
@@ -420,6 +422,11 @@
   }
   .fx-chip:hover { border-color: var(--brass); color: var(--ink); }
   .fx-chip.on { background: var(--brass-soft); border-color: var(--brass); color: var(--brass-deep); }
+  .fx-sub { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .fx-colors, .fx-width { display: flex; align-items: center; gap: 9px; }
+  .sw { width: 24px; height: 24px; border-radius: 999px; border: 2px solid var(--border); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  .sw.on { border-color: var(--brass); box-shadow: 0 0 0 2px var(--brass-soft); }
+  #f-fx-width { width: 150px; accent-color: var(--brass); }
 </style>
 </head>
 <body>
@@ -489,6 +496,18 @@
           <button type="button" class="fx-chip" data-fx="sticker" onclick="setFx('sticker')" data-i18n="fxSticker">Sticker</button>
           <button type="button" class="fx-chip" data-fx="glow" onclick="setFx('glow')" data-i18n="fxGlow">Glow</button>
           <button type="button" class="fx-chip" data-fx="none" onclick="setFx('none')" data-i18n="fxNone">None</button>
+        </div>
+        <div class="fx-sub" id="f-fx-sub" style="display:none">
+          <div class="fx-colors">
+            <span class="fx-label" data-i18n="fxColor">Color</span>
+            <button type="button" class="sw" data-c="white" style="background:#fff7ec" onclick="setFxColor('white')" aria-label="white"></button>
+            <button type="button" class="sw" data-c="gold" style="background:#e6c573" onclick="setFxColor('gold')" aria-label="gold"></button>
+            <button type="button" class="sw" data-c="accent" style="background:#ef6d5f" onclick="setFxColor('accent')" aria-label="accent"></button>
+          </div>
+          <div class="fx-width">
+            <span class="fx-label" data-i18n="fxWidth">Thickness</span>
+            <input type="range" id="f-fx-width" min="0.6" max="3.2" step="0.2" value="1.8" oninput="setFxWidth(this.value)">
+          </div>
         </div>
         <div class="photo-actions">
           <button class="btn ghost" type="button" id="f-bg" data-i18n="removeBg" onclick="removeBg()">✨ Remove background</button>
@@ -678,6 +697,8 @@
     fxSticker: 'Sticker',
     fxGlow: 'Glow',
     fxNone: 'None',
+    fxColor: 'Color',
+    fxWidth: 'Thickness',
     st: { owned: 'Owned', transit: 'In transit', want: 'Wishlist', forsale: 'For sale', sold: 'Sold', reserved: 'Reserved' },
     cat: { figure: 'Figure', acrylic: 'Acrylic', badge: 'Badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag', other: 'Other' },
     catSel: { figure: 'Figure', acrylic: 'Acrylic stand', badge: 'Can badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag part', other: 'Other' },
@@ -864,8 +885,22 @@
   var pendingPhoto = null;
   var pendingFav = false;
   var pendingFx = 'sticker';
+  var pendingFxColor = 'white';
+  var pendingFxWidth = 1.8;
+  var FXCOLORS = { white: '#fff7ec', gold: '#e6c573', accent: '#ef6d5f' };
   function fxClass(fx) { return fx === 'glow' ? 'fxglow' : (fx === 'none' ? 'fxnone' : 'cut'); }
   function isCutout(p) { return p && p.indexOf('data:image/png') === 0; }
+  /* per-item stroke color/width → inline CSS vars the .cut filter reads (sticker style only) */
+  function fxStyleAttr(it) {
+    if ((it.fx || 'sticker') !== 'sticker') return '';
+    var c = FXCOLORS[it.fxColor] || FXCOLORS.white;
+    var w = (typeof it.fxWidth === 'number' && it.fxWidth > 0) ? it.fxWidth : 1.8;
+    return ' style="--sc:' + c + ';--sw:' + w + 'px"';
+  }
+  function fxStylePending() {
+    if (pendingFx !== 'sticker') return '';
+    return ' style="--sc:' + (FXCOLORS[pendingFxColor] || FXCOLORS.white) + ';--sw:' + pendingFxWidth + 'px"';
+  }
   var filterStatus = 'all';
   var filterCat = 'all';
 
@@ -974,7 +1009,7 @@
     var thumb;
     if (i.photo) {
       thumb = isCutout(i.photo)
-        ? '<div class="thumb lit"><img class="' + fxClass(i.fx || 'sticker') + '" src="' + i.photo + '" alt=""></div>'   /* cutout → spotlit niche + chosen edge style */
+        ? '<div class="thumb lit"><img class="' + fxClass(i.fx || 'sticker') + '"' + fxStyleAttr(i) + ' src="' + i.photo + '" alt=""></div>'   /* cutout → spotlit niche + chosen edge style */
         : '<div class="thumb" style="background-image:url(' + i.photo + ')"></div>';
     } else {
       thumb = '<div class="thumb ph">' + medallion(cat) + '</div>';
@@ -1006,7 +1041,7 @@
     var st = i.status || 'owned', cat = i.category || 'other';
     var bcls = badgeClass(st);
     var cut = isCutout(i.photo);
-    var inner = i.photo ? '<img class="cp-img' + (cut ? ' ' + fxClass(i.fx || 'sticker') : '') + '" src="' + i.photo + '" alt="">' : medallion(cat);
+    var inner = i.photo ? '<img class="cp-img' + (cut ? ' ' + fxClass(i.fx || 'sticker') : '') + '"' + (cut ? fxStyleAttr(i) : '') + ' src="' + i.photo + '" alt="">' : medallion(cat);
     var stage = '<div class="cp-stage' + (i.photo ? ' has-photo' : '') + '" onclick="openLightbox(\'' + i.id + '\')">' + inner + '</div>';
     var priceStr = Number(i.price) ? fmtMoney(i.price, i.currency) : (st === 'want' ? esc(stLabel('want')) : '—');
     return '<div class="cp">'
@@ -1078,7 +1113,7 @@
   }
   function openAdd() {
     if (items.length >= FREE_CAP) { openPro(); return; }
-    editingId = null; pendingPhoto = null; pendingFav = (items.length === 0); pendingFx = 'sticker';
+    editingId = null; pendingPhoto = null; pendingFav = (items.length === 0); pendingFx = 'sticker'; pendingFxColor = 'white'; pendingFxWidth = 1.8;
     document.getElementById('itemTitle').textContent = t('modalAdd');
     document.getElementById('f-name').value = '';
     document.getElementById('f-series').value = '';
@@ -1098,7 +1133,7 @@
   function openEdit(id) {
     var it = items.filter(function (x) { return x.id === id; })[0];
     if (!it) return;
-    editingId = id; pendingPhoto = it.photo || null; pendingFav = !!it.favorite; pendingFx = it.fx || 'sticker';
+    editingId = id; pendingPhoto = it.photo || null; pendingFav = !!it.favorite; pendingFx = it.fx || 'sticker'; pendingFxColor = it.fxColor || 'white'; pendingFxWidth = (typeof it.fxWidth === 'number' ? it.fxWidth : 1.8);
     document.getElementById('itemTitle').textContent = t('modalEdit');
     document.getElementById('f-name').value = it.name || '';
     document.getElementById('f-series').value = it.series || '';
@@ -1130,7 +1165,9 @@
       notes: document.getElementById('f-notes').value.trim(),
       photo: pendingPhoto || null,
       favorite: !!pendingFav,
-      fx: pendingFx
+      fx: pendingFx,
+      fxColor: pendingFxColor,
+      fxWidth: pendingFxWidth
     };
     if (!obj.name) { document.getElementById('f-name').focus(); return; }
     if (editingId) { items = items.map(function (x) { return x.id === editingId ? obj : x; }); }
@@ -1179,9 +1216,14 @@
       filled.style.display = 'block';
       var cut = isCutout(data);
       stage.className = 'photo-stage' + (cut ? ' lit' : '');
-      stage.innerHTML = '<img class="' + (cut ? fxClass(pendingFx) : 'plainphoto') + '" src="' + data + '" alt="">';
+      stage.innerHTML = '<img class="' + (cut ? fxClass(pendingFx) : 'plainphoto') + '"' + (cut ? fxStylePending() : '') + ' src="' + data + '" alt="">';
       fxRow.style.display = cut ? 'flex' : 'none';
-      if (cut) updateFxChips();
+      var sub = document.getElementById('f-fx-sub');
+      sub.style.display = (cut && pendingFx === 'sticker') ? 'flex' : 'none';
+      if (cut) {
+        updateFxChips();
+        if (pendingFx === 'sticker') { document.getElementById('f-fx-width').value = pendingFxWidth; updateFxColorSwatches(); }
+      }
     } else {
       zone.style.display = 'flex';
       filled.style.display = 'none';
@@ -1195,10 +1237,27 @@
     }
   }
   function setFx(s) { pendingFx = s; setPhotoPreview(pendingPhoto); }
+  function updateFxColorSwatches() {
+    var sws = document.querySelectorAll('#f-fx-sub .sw');
+    for (var i = 0; i < sws.length; i++) {
+      if (sws[i].getAttribute('data-c') === pendingFxColor) sws[i].classList.add('on'); else sws[i].classList.remove('on');
+    }
+  }
+  function setFxColor(c) {
+    pendingFxColor = c;
+    var img = document.querySelector('#f-photo-stage img');
+    if (img) img.style.setProperty('--sc', FXCOLORS[c] || FXCOLORS.white);
+    updateFxColorSwatches();
+  }
+  function setFxWidth(w) {
+    pendingFxWidth = parseFloat(w) || 1.8;
+    var img = document.querySelector('#f-photo-stage img');
+    if (img) img.style.setProperty('--sw', pendingFxWidth + 'px');
+  }
   function openPhotoView() {
     if (!pendingPhoto) return;
     var cut = isCutout(pendingPhoto);
-    document.getElementById('lb-stage').innerHTML = '<img class="' + (cut ? fxClass(pendingFx) : '') + '" src="' + pendingPhoto + '" alt="">';
+    document.getElementById('lb-stage').innerHTML = '<img class="' + (cut ? fxClass(pendingFx) : '') + '"' + (cut ? fxStylePending() : '') + ' src="' + pendingPhoto + '" alt="">';
     document.getElementById('lb-plaque').innerHTML = '';
     document.getElementById('lightbox').classList.add('show');
   }
@@ -1623,7 +1682,7 @@
     var st = i.status || 'owned', cat = i.category || 'other';
     var bcls = badgeClass(st);
     var cut = isCutout(i.photo);
-    var inner = i.photo ? '<img class="' + (cut ? fxClass(i.fx || 'sticker') : '') + '" src="' + i.photo + '" alt="">' : medallion(cat);
+    var inner = i.photo ? '<img class="' + (cut ? fxClass(i.fx || 'sticker') : '') + '"' + (cut ? fxStyleAttr(i) : '') + ' src="' + i.photo + '" alt="">' : medallion(cat);
     document.getElementById('lb-stage').innerHTML = inner;
     var priceStr = Number(i.price) ? fmtMoney(i.price, i.currency) : (st === 'want' ? esc(stLabel('want')) : '—');
     document.getElementById('lb-plaque').innerHTML =

@@ -35,6 +35,8 @@ window.MV_LANG['fr'] = {
   fxSticker: 'Autocollant',
   fxGlow: 'Lueur',
   fxNone: 'Aucun',
+  fxColor: 'Couleur',
+  fxWidth: 'Épaisseur',
   modalAdd: 'Ajouter une pièce',
   modalEdit: 'Modifier la pièce',
   fldName: 'Nom',

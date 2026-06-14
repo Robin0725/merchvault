@@ -35,6 +35,8 @@ window.MV_LANG['hi'] = {
   fxSticker: 'स्टिकर',
   fxGlow: 'चमक',
   fxNone: 'कोई नहीं',
+  fxColor: 'रंग',
+  fxWidth: 'मोटाई',
   modalAdd: 'एक आइटम जोड़ें',
   modalEdit: 'आइटम एडिट करें',
   fldName: 'नाम',

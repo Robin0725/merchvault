@@ -35,6 +35,8 @@ window.MV_LANG['zh-CN'] = {
   fxSticker: '卡通描边',
   fxGlow: '发光描边',
   fxNone: '无',
+  fxColor: '颜色',
+  fxWidth: '粗细',
   modalAdd: '添加一件',
   modalEdit: '编辑',
   fldName: '名称',

@@ -35,6 +35,8 @@ window.MV_LANG['ja'] = {
   fxSticker: 'ステッカー',
   fxGlow: '発光',
   fxNone: 'なし',
+  fxColor: '色',
+  fxWidth: '太さ',
   modalAdd: '1点を追加',
   modalEdit: '編集',
   fldName: '名前',

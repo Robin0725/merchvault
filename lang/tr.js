@@ -35,6 +35,8 @@ window.MV_LANG['tr'] = {
   fxSticker: 'Çıkartma',
   fxGlow: 'Parlama',
   fxNone: 'Yok',
+  fxColor: 'Renk',
+  fxWidth: 'Kalınlık',
   modalAdd: 'Parça ekle',
   modalEdit: 'Parçayı düzenle',
   fldName: 'İsim',

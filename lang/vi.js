@@ -35,6 +35,8 @@ window.MV_LANG['vi'] = {
   fxSticker: 'Nhãn dán',
   fxGlow: 'Phát sáng',
   fxNone: 'Không',
+  fxColor: 'Màu',
+  fxWidth: 'Độ dày',
   modalAdd: 'Thêm một món',
   modalEdit: 'Sửa món',
   fldName: 'Tên',

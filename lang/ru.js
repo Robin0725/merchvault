@@ -35,6 +35,8 @@ window.MV_LANG['ru'] = {
   fxSticker: 'Стикер',
   fxGlow: 'Свечение',
   fxNone: 'Без',
+  fxColor: 'Цвет',
+  fxWidth: 'Толщина',
   modalAdd: 'Добавить предмет',
   modalEdit: 'Изменить предмет',
   fldName: 'Название',

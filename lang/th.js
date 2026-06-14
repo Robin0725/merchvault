@@ -35,6 +35,8 @@ window.MV_LANG['th'] = {
   fxSticker: 'สติกเกอร์',
   fxGlow: 'เรืองแสง',
   fxNone: 'ไม่มี',
+  fxColor: 'สี',
+  fxWidth: 'ความหนา',
   modalAdd: 'เพิ่มชิ้นงาน',
   modalEdit: 'แก้ไขชิ้นงาน',
   fldName: 'ชื่อ',

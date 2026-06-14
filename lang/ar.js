@@ -35,6 +35,8 @@ window.MV_LANG['ar'] = {
   fxSticker: 'ملصق',
   fxGlow: 'توهّج',
   fxNone: 'بدون',
+  fxColor: 'اللون',
+  fxWidth: 'السماكة',
   modalAdd: 'إضافة قطعة',
   modalEdit: 'تعديل القطعة',
   fldName: 'الاسم',

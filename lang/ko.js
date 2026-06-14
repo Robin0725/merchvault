@@ -35,6 +35,8 @@ window.MV_LANG['ko'] = {
   fxSticker: '스티커',
   fxGlow: '글로우',
   fxNone: '없음',
+  fxColor: '색',
+  fxWidth: '두께',
   modalAdd: '굿즈 추가',
   modalEdit: '굿즈 편집',
   fldName: '이름',

@@ -35,6 +35,8 @@ window.MV_LANG['es'] = {
   fxSticker: 'Pegatina',
   fxGlow: 'Brillo',
   fxNone: 'Ninguno',
+  fxColor: 'Color',
+  fxWidth: 'Grosor',
   modalAdd: 'Añadir una pieza',
   modalEdit: 'Editar pieza',
   fldName: 'Nombre',

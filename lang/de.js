@@ -35,6 +35,8 @@ window.MV_LANG['de'] = {
   fxSticker: 'Sticker',
   fxGlow: 'Leuchten',
   fxNone: 'Keiner',
+  fxColor: 'Farbe',
+  fxWidth: 'Dicke',
   modalAdd: 'Stück hinzufügen',
   modalEdit: 'Stück bearbeiten',
   fldName: 'Name',

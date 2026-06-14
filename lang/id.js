@@ -35,6 +35,8 @@ window.MV_LANG['id'] = {
   fxSticker: 'Stiker',
   fxGlow: 'Cahaya',
   fxNone: 'Tidak ada',
+  fxColor: 'Warna',
+  fxWidth: 'Ketebalan',
   modalAdd: 'Tambah item',
   modalEdit: 'Edit item',
   fldName: 'Nama',

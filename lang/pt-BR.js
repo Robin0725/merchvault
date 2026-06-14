@@ -35,6 +35,8 @@ window.MV_LANG['pt-BR'] = {
   fxSticker: 'Adesivo',
   fxGlow: 'Brilho',
   fxNone: 'Nenhum',
+  fxColor: 'Cor',
+  fxWidth: 'Espessura',
   modalAdd: 'Adicionar uma peça',
   modalEdit: 'Editar peça',
   fldName: 'Nome',
