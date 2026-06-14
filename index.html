@@ -223,6 +223,9 @@
   .b-owned { background: var(--owned-bg); color: var(--owned); }
   .b-transit { background: var(--transit-bg); color: var(--transit); }
   .b-want { background: var(--want-bg); color: var(--want); }
+  .b-forsale { background: #dff3e6; color: #2f8f55; box-shadow: 0 0 0 1px rgba(47,143,85,.22); }
+  .b-reserved { background: var(--transit-bg); color: var(--transit); }
+  .b-sold { background: #ece6df; color: #97877a; text-decoration: line-through; }
   .cat-tag {
     position: absolute; top: 9px; left: 9px; z-index: 2;
     background: rgba(33,29,26,.6); color: #fff; font-size: 10.5px; font-weight: 700;
@@ -446,6 +449,7 @@
     <div class="spacer"></div>
     <button class="btn ghost" data-i18n="csvBtn" onclick="exportCSV()">↓ CSV</button>
     <button class="btn ghost" data-i18n="showcaseBtn" onclick="exportShowcase()">🖼 Showcase</button>
+    <button class="btn ghost" data-i18n="showroomBtn" onclick="openShowroom()">🏬 Showroom</button>
   </div>
 
   <div class="filters" id="filters"></div>
@@ -523,12 +527,16 @@
     <div class="two">
       <div class="field">
         <label data-i18n="fldStatus">Status</label>
-        <select id="f-status"></select>
+        <select id="f-status" onchange="onStatusChange()"></select>
       </div>
       <div class="field">
         <label data-i18n="fldDate">Bought / wanted on</label>
         <input type="date" id="f-date">
       </div>
+    </div>
+    <div class="field" id="f-ask-field" style="display:none">
+      <label data-i18n="fldAskPrice">Asking price (for sale)</label>
+      <input type="number" id="f-ask" placeholder="0.00" step="0.01" min="0">
     </div>
     <div class="field">
       <label data-i18n="fldChannel">Where from (shop / event)</label>
@@ -558,6 +566,7 @@
     <ul class="pro-list">
       <li data-i18n="proLi1">Unlimited items (free covers your first 60)</li>
       <li data-i18n="proLi2">Beautiful, customizable showcase images for socials</li>
+      <li data-i18n="proLi5">Shareable showroom page: no watermark, unlimited items, price tags &amp; a custom accent</li>
       <li data-i18n="proLi3">Bulk import from a spreadsheet (CSV)</li>
       <li data-i18n="proLi4">Backup &amp; restore your whole vault as one file</li>
     </ul>
@@ -566,6 +575,53 @@
       <div class="spacer"></div>
       <button class="btn ghost" data-i18n="proLater" onclick="closePro()">Maybe later</button>
       <button class="btn primary" data-i18n="proNotify" onclick="notifyPro()">Notify me</button>
+    </div>
+  </div>
+</div>
+
+<!-- Showroom export settings -->
+<div class="modal-bg" id="showroomModal" onclick="if(event.target===this)closeShowroom()">
+  <div class="modal">
+    <h3 data-i18n="srTitle">Export your showroom</h3>
+    <p class="note" data-i18n="srIntro">Build a single web page you can download and send to friends or post. Items marked For sale or Reserved show first, with prices. Your data stays on your device — the file is generated right here.</p>
+    <div class="field">
+      <label data-i18n="srName">Showroom name</label>
+      <input type="text" id="sr-name" data-i18n-ph="srNamePh" placeholder="My Collection">
+    </div>
+    <div class="field">
+      <label data-i18n="srSeller">Your name / handle</label>
+      <input type="text" id="sr-seller" data-i18n-ph="srSellerPh" placeholder="e.g. @yourname">
+    </div>
+    <div class="two">
+      <div class="field">
+        <label data-i18n="srDiscord">Discord</label>
+        <input type="text" id="sr-discord" data-i18n-ph="srDiscordPh" placeholder="username or invite link">
+      </div>
+      <div class="field">
+        <label data-i18n="srX">X / Twitter</label>
+        <input type="text" id="sr-x" data-i18n-ph="srXPh" placeholder="@handle or link">
+      </div>
+    </div>
+    <div class="two">
+      <div class="field">
+        <label data-i18n="srInsta">Instagram</label>
+        <input type="text" id="sr-insta" data-i18n-ph="srInstaPh" placeholder="@handle or link">
+      </div>
+      <div class="field">
+        <label data-i18n="srMarket">Marketplace link</label>
+        <input type="text" id="sr-market" data-i18n-ph="srMarketPh" placeholder="Mercari / 闲鱼 / eBay…">
+      </div>
+    </div>
+    <div class="field">
+      <label><span data-i18n="srAccent">Accent color</span> <span id="sr-accent-lock" class="link-btn" style="float:right" onclick="proGate(event)">🔒 Pro</span></label>
+      <input type="color" id="sr-accent" value="#ef6d5f" style="height:42px;padding:4px;cursor:pointer">
+    </div>
+    <p class="note" id="sr-free-note" data-i18n="srFreeNote">Free showrooms include up to 15 items and a small "Made with MerchVault" mark. Pro removes both, unlocks unlimited items, price tags, and a custom accent color.</p>
+    <div class="modal-actions">
+      <button class="link-btn" data-i18n="srProMore" onclick="proGate(event)" style="color:var(--accent-dark)">✨ Get Pro perks</button>
+      <div class="spacer"></div>
+      <button class="btn ghost" data-i18n="cancel" onclick="closeShowroom()">Cancel</button>
+      <button class="btn primary" id="sr-export-btn" data-i18n="srExport" onclick="exportShowroom()">↓ Export</button>
     </div>
   </div>
 </div>
@@ -622,7 +678,7 @@
     fxSticker: 'Sticker',
     fxGlow: 'Glow',
     fxNone: 'None',
-    st: { owned: 'Owned', transit: 'In transit', want: 'Wishlist' },
+    st: { owned: 'Owned', transit: 'In transit', want: 'Wishlist', forsale: 'For sale', sold: 'Sold', reserved: 'Reserved' },
     cat: { figure: 'Figure', acrylic: 'Acrylic', badge: 'Badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag', other: 'Other' },
     catSel: { figure: 'Figure', acrylic: 'Acrylic stand', badge: 'Can badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag part', other: 'Other' },
     emptyTitle: 'Your gallery is empty. Add your first piece to get started.',
@@ -658,6 +714,7 @@
     proLi2: 'Beautiful, customizable showcase images for socials',
     proLi3: 'Bulk import from a spreadsheet (CSV)',
     proLi4: 'Backup & restore your whole vault as one file',
+    proLi5: 'Shareable showroom page: no watermark, unlimited items, price tags & a custom accent',
     proOutro: "One payment, no subscription, ever. Want it? Tap below and we'll email you the moment it's live.",
     proLater: 'Maybe later',
     proNotify: 'Notify me',
@@ -673,7 +730,37 @@
     footFamily: 'Part of a family of one-time-purchase tools:',
     scTitle: 'My Collection',
     scItems: '{n} items',
-    addFirst: 'Add some items first.'
+    addFirst: 'Add some items first.',
+    showroomBtn: '🏬 Showroom',
+    fldAskPrice: 'Asking price (for sale)',
+    srTitle: 'Export your showroom',
+    srIntro: 'Build a single web page you can download and send to friends or post. Items marked For sale or Reserved show first, with prices. Your data stays on your device — the file is generated right here.',
+    srName: 'Showroom name',
+    srNamePh: 'My Collection',
+    srSeller: 'Your name / handle',
+    srSellerPh: 'e.g. @yourname',
+    srDiscord: 'Discord',
+    srDiscordPh: 'username or invite link',
+    srX: 'X / Twitter',
+    srXPh: '@handle or link',
+    srInsta: 'Instagram',
+    srInstaPh: '@handle or link',
+    srMarket: 'Marketplace link',
+    srMarketPh: 'Mercari / Xianyu / eBay…',
+    srAccent: 'Accent color',
+    srFreeNote: 'Free showrooms include up to 15 items and a small "Made with MerchVault" mark. Pro removes both, unlocks unlimited items, price tags, and a custom accent color.',
+    srProMore: '✨ Get Pro perks',
+    srExport: '↓ Export',
+    srNoSale: 'No items to show yet. Add a few first.',
+    srBuilding: 'Building your showroom…',
+    /* strings baked into the exported showroom page */
+    srPageForSale: 'For sale',
+    srPageShowAll: 'Show whole collection',
+    srPageShowSale: 'Show for-sale only',
+    srPageSold: 'Sold',
+    srPageContact: 'Get in touch',
+    srPageMade: 'Made with MerchVault',
+    srPageItems: 'pieces'
   };
 
   var LANGS = [
@@ -748,14 +835,24 @@
     var phs = document.querySelectorAll('[data-i18n-ph]');
     for (var j = 0; j < phs.length; j++) { phs[j].setAttribute('placeholder', t(phs[j].getAttribute('data-i18n-ph'))); }
     fillSelectFrom('f-category', CATS, catLong);
-    fillSelectFrom('f-status', ['owned', 'transit', 'want'], stLabel);
+    fillSelectFrom('f-status', ['owned', 'forsale', 'reserved', 'sold', 'transit', 'want'], stLabel);
     render();
   }
 
   /* ============ app ============ */
   var KEY = 'merchvault_items';
   var TITLE_KEY = 'merchvault_title';
+  var SHOWROOM_KEY = 'merchvault_showroom';
   var FREE_CAP = 60;
+  var SHOWROOM_FREE_CAP = 15;
+  /* statuses that mean the piece is actually being offered to buyers */
+  var SALE_STATUSES = { forsale: true, reserved: true };
+  function badgeClass(st) {
+    return ({ owned:'b-owned', transit:'b-transit', want:'b-want', forsale:'b-forsale', reserved:'b-reserved', sold:'b-sold' })[st] || 'b-owned';
+  }
+  /* No real payment exists yet — Pro is a fake door, so this always returns false.
+     Centralized so the showroom export and gated toggles share one source of truth. */
+  function isPro() { return false; }
   var CATS = ['figure', 'acrylic', 'badge', 'keychain', 'photocard', 'plush', 'itabag', 'other'];
   var CAT_ICON = { figure:'🧍', acrylic:'🪧', badge:'🔘', keychain:'🔑', photocard:'🃏', plush:'🧸', itabag:'🎒', other:'📦' };
   var CAT_COLOR = {
@@ -773,12 +870,25 @@
   var filterCat = 'all';
 
   function load() {
-    try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+    var arr;
+    try { arr = JSON.parse(localStorage.getItem(KEY)) || []; }
     catch (e) { return []; }
+    /* MIGRATION: older saves have no status / askPrice. Default any missing or
+       unrecognized status to 'owned' so nothing breaks, and leave askPrice absent. */
+    var KNOWN = { owned:1, transit:1, want:1, forsale:1, reserved:1, sold:1 };
+    arr.forEach(function (it) {
+      if (!it.status || !KNOWN[it.status]) it.status = 'owned';
+      if (it.askPrice == null) it.askPrice = '';
+    });
+    return arr;
   }
   function save() { localStorage.setItem(KEY, JSON.stringify(items)); }
   function getTitle() { try { return localStorage.getItem(TITLE_KEY) || ''; } catch (e) { return ''; } }
   function setTitle(v) { try { localStorage.setItem(TITLE_KEY, v); } catch (e) {} }
+  function getShowroom() {
+    try { return JSON.parse(localStorage.getItem(SHOWROOM_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function setShowroom(o) { try { localStorage.setItem(SHOWROOM_KEY, JSON.stringify(o)); } catch (e) {} }
   function uid() { return 'i' + Date.now().toString(36) + Math.floor(performance.now() % 1000).toString(36); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
   function fmtMoney(n, ccy) {
@@ -805,7 +915,7 @@
 
   /* ---------- stats ---------- */
   function renderStats() {
-    var owned = items.filter(function (i) { return i.status !== 'want'; });
+    var owned = items.filter(function (i) { return i.status !== 'want' && i.status !== 'sold'; });
     var want = items.filter(function (i) { return i.status === 'want'; });
     var byCcy = {};
     owned.forEach(function (i) { var c = i.currency || 'USD'; byCcy[c] = (byCcy[c] || 0) + (Number(i.price) || 0); });
@@ -829,7 +939,7 @@
 
   /* ---------- filters ---------- */
   function renderFilters() {
-    var sts = [['all', t('fAll')], ['owned', stLabel('owned')], ['transit', stLabel('transit')], ['want', stLabel('want')]];
+    var sts = [['all', t('fAll')], ['owned', stLabel('owned')], ['forsale', stLabel('forsale')], ['reserved', stLabel('reserved')], ['sold', stLabel('sold')], ['transit', stLabel('transit')], ['want', stLabel('want')]];
     var html = sts.map(function (s) {
       return '<span class="chip ' + (filterStatus===s[0]?'on':'') + '" onclick="setStatus(\'' + s[0] + '\')">' + esc(s[1]) + '</span>';
     }).join('');
@@ -860,7 +970,7 @@
   function cardHTML(i, dups) {
     var st = i.status || 'owned';
     var cat = i.category || 'other';
-    var bcls = st === 'owned' ? 'b-owned' : (st === 'transit' ? 'b-transit' : 'b-want');
+    var bcls = badgeClass(st);
     var thumb;
     if (i.photo) {
       thumb = isCutout(i.photo)
@@ -869,9 +979,14 @@
     } else {
       thumb = '<div class="thumb ph">' + medallion(cat) + '</div>';
     }
-    var priceStr = (st === 'want')
-      ? '<span class="price" style="color:var(--want)">' + (Number(i.price) ? fmtMoney(i.price, i.currency) : esc(stLabel('want'))) + '</span>'
-      : '<span class="price">' + (Number(i.price) ? fmtMoney(i.price, i.currency) : '—') + '</span>';
+    var priceStr;
+    if (st === 'want') {
+      priceStr = '<span class="price" style="color:var(--want)">' + (Number(i.price) ? fmtMoney(i.price, i.currency) : esc(stLabel('want'))) + '</span>';
+    } else if (SALE_STATUSES[st] && Number(i.askPrice)) {
+      priceStr = '<span class="price" style="color:var(--owned)">' + fmtMoney(i.askPrice, i.currency) + '</span>';
+    } else {
+      priceStr = '<span class="price">' + (Number(i.price) ? fmtMoney(i.price, i.currency) : '—') + '</span>';
+    }
     var fav = i.favorite ? '<div class="fav-star" style="right:9px">★</div>' : '';
     var isDup = dups[dupKey(i)] ? '<div class="dup-flag">' + esc(t('dupWord').toUpperCase()) + '</div>' : '';
     return '<div class="card" onclick="openLightbox(\'' + i.id + '\')">'
@@ -889,7 +1004,7 @@
   }
   function centerpieceHTML(i) {
     var st = i.status || 'owned', cat = i.category || 'other';
-    var bcls = st === 'owned' ? 'b-owned' : (st === 'transit' ? 'b-transit' : 'b-want');
+    var bcls = badgeClass(st);
     var cut = isCutout(i.photo);
     var inner = i.photo ? '<img class="cp-img' + (cut ? ' ' + fxClass(i.fx || 'sticker') : '') + '" src="' + i.photo + '" alt="">' : medallion(cat);
     var stage = '<div class="cp-stage' + (i.photo ? ' has-photo' : '') + '" onclick="openLightbox(\'' + i.id + '\')">' + inner + '</div>';
@@ -956,6 +1071,11 @@
     if (pendingFav) btn.classList.add('on'); else btn.classList.remove('on');
   }
   function toggleFav() { pendingFav = !pendingFav; setFavUI(); }
+  /* show the asking-price field only for For sale / Reserved */
+  function onStatusChange() {
+    var st = document.getElementById('f-status').value;
+    document.getElementById('f-ask-field').style.display = SALE_STATUSES[st] ? 'block' : 'none';
+  }
   function openAdd() {
     if (items.length >= FREE_CAP) { openPro(); return; }
     editingId = null; pendingPhoto = null; pendingFav = (items.length === 0); pendingFx = 'sticker';
@@ -966,10 +1086,11 @@
     document.getElementById('f-price').value = '';
     document.getElementById('f-currency').value = 'USD';
     document.getElementById('f-status').value = 'owned';
+    document.getElementById('f-ask').value = '';
     document.getElementById('f-date').value = '';
     document.getElementById('f-channel').value = '';
     document.getElementById('f-notes').value = '';
-    setPhotoPreview(null); setFavUI();
+    setPhotoPreview(null); setFavUI(); onStatusChange();
     document.getElementById('f-delete').style.display = 'none';
     document.getElementById('itemModal').classList.add('show');
     document.getElementById('f-name').focus();
@@ -985,10 +1106,11 @@
     document.getElementById('f-price').value = it.price != null ? it.price : '';
     document.getElementById('f-currency').value = it.currency || 'USD';
     document.getElementById('f-status').value = it.status || 'owned';
+    document.getElementById('f-ask').value = it.askPrice != null ? it.askPrice : '';
     document.getElementById('f-date').value = it.date || '';
     document.getElementById('f-channel').value = it.channel || '';
     document.getElementById('f-notes').value = it.notes || '';
-    setPhotoPreview(it.photo || null); setFavUI();
+    setPhotoPreview(it.photo || null); setFavUI(); onStatusChange();
     document.getElementById('f-delete').style.display = 'inline';
     document.getElementById('itemModal').classList.add('show');
   }
@@ -1002,6 +1124,7 @@
       price: document.getElementById('f-price').value,
       currency: document.getElementById('f-currency').value,
       status: document.getElementById('f-status').value,
+      askPrice: document.getElementById('f-ask').value,
       date: document.getElementById('f-date').value,
       channel: document.getElementById('f-channel').value.trim(),
       notes: document.getElementById('f-notes').value.trim(),
@@ -1169,7 +1292,7 @@
   /* ---------- CSV export ---------- */
   function exportCSV() {
     if (!items.length) { alert(t('addFirst')); return; }
-    var cols = ['name','series','category','price','currency','status','date','channel','notes','favorite'];
+    var cols = ['name','series','category','price','currency','status','askPrice','date','channel','notes','favorite'];
     var head = cols.join(',');
     var rows = items.map(function (i) {
       return cols.map(function (c) {
@@ -1262,12 +1385,243 @@
   function openPrivacy() { document.getElementById('privacyModal').classList.add('show'); }
   function closePrivacy() { document.getElementById('privacyModal').classList.remove('show'); }
 
+  /* ---------- showroom export ---------- */
+  function openShowroom() {
+    if (!items.length) { alert(t('addFirst')); return; }
+    var cfg = getShowroom();
+    document.getElementById('sr-name').value = cfg.name || getTitle() || t('scTitle');
+    document.getElementById('sr-seller').value = cfg.seller || '';
+    document.getElementById('sr-discord').value = cfg.discord || '';
+    document.getElementById('sr-x').value = cfg.x || '';
+    document.getElementById('sr-insta').value = cfg.insta || '';
+    document.getElementById('sr-market').value = cfg.market || '';
+    var accent = document.getElementById('sr-accent');
+    accent.value = (isPro() && cfg.accent) ? cfg.accent : '#ef6d5f';
+    accent.disabled = !isPro();
+    document.getElementById('sr-accent-lock').style.display = isPro() ? 'none' : 'inline';
+    document.getElementById('sr-free-note').style.display = isPro() ? 'none' : 'block';
+    document.getElementById('showroomModal').classList.add('show');
+  }
+  function closeShowroom() { document.getElementById('showroomModal').classList.remove('show'); }
+  /* a Pro-locked control was clicked → log + open the existing fake-door, same as the pill */
+  function proGate(ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } openPro(); }
+  function readShowroomForm() {
+    return {
+      name: document.getElementById('sr-name').value.trim(),
+      seller: document.getElementById('sr-seller').value.trim(),
+      discord: document.getElementById('sr-discord').value.trim(),
+      x: document.getElementById('sr-x').value.trim(),
+      insta: document.getElementById('sr-insta').value.trim(),
+      market: document.getElementById('sr-market').value.trim(),
+      accent: isPro() ? document.getElementById('sr-accent').value : '#ef6d5f'
+    };
+  }
+
+  /* recompress one stored photo to a sane size for the shared file (~800px, JPEG ~0.8).
+     Cut-outs are PNG-with-transparency, so those stay PNG to keep the transparent edge. */
+  function compressForShowroom(dataUrl) {
+    return new Promise(function (res) {
+      if (!dataUrl) { res(null); return; }
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var max = 800, w = img.width, h = img.height;
+          if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
+          else if (h > max) { w = Math.round(w * max / h); h = max; }
+          var c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          res(isCutout(dataUrl) ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.8));
+        } catch (e) { res(dataUrl); }
+      };
+      img.onerror = function () { res(dataUrl); };
+      img.src = dataUrl;
+    });
+  }
+
+  function exportShowroom() {
+    var cfg = readShowroomForm();
+    setShowroom(cfg);
+    /* sale items first, then sold, then the rest; wishlist pieces aren't for buyers */
+    var pool = items.filter(function (i) { return i.status !== 'want'; });
+    var order = { forsale: 0, reserved: 1, sold: 2, owned: 3, transit: 4 };
+    pool = pool.slice().sort(function (a, b) {
+      return (order[a.status] == null ? 5 : order[a.status]) - (order[b.status] == null ? 5 : order[b.status]);
+    });
+    if (!pool.length) { alert(t('srNoSale')); return; }
+    var pro = isPro();
+    if (!pro && pool.length > SHOWROOM_FREE_CAP) pool = pool.slice(0, SHOWROOM_FREE_CAP);
+
+    var btn = document.getElementById('sr-export-btn');
+    var oldLabel = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = t('srBuilding'); }
+
+    Promise.all(pool.map(function (i) {
+      return compressForShowroom(i.photo).then(function (p) {
+        return {
+          name: i.name || t('untitled'),
+          series: i.series || '',
+          status: i.status || 'owned',
+          category: i.category || 'other',
+          notes: i.notes || '',
+          ask: Number(i.askPrice) || 0,
+          buy: Number(i.price) || 0,
+          currency: i.currency || 'USD',
+          fx: i.fx || 'sticker',
+          photo: p
+        };
+      });
+    })).then(function (cards) {
+      var html = buildShowroomHTML(cfg, cards, pro);
+      downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), 'showroom.html');
+      if (window.goatcounter && goatcounter.count) goatcounter.count({ path: 'showroom-export' + (pro ? '-pro' : '-free'), event: true });
+      closeShowroom();
+    })['catch'](function () {})
+    .then(function () {
+      if (btn) { btn.disabled = false; btn.textContent = oldLabel; }
+    });
+  }
+
+  /* Build a fully self-contained showroom page. All strings/markup are inlined; images are
+     already base64. Money is formatted here (the export has no JS dependency on this app). */
+  function buildShowroomHTML(cfg, cards, pro) {
+    function fm(n, ccy) {
+      var v = Number(n) || 0;
+      try { return new Intl.NumberFormat(CUR_LANG, { style:'currency', currency: ccy||'USD', maximumFractionDigits:(ccy==='JPY'||ccy==='KRW')?0:2 }).format(v); }
+      catch (e) { return (ccy||'USD') + ' ' + v.toFixed(2); }
+    }
+    var accent = /^#[0-9a-fA-F]{3,8}$/.test(cfg.accent || '') ? cfg.accent : '#ef6d5f';
+    var stWords = MV_LANG.en.st;
+    function stWord(s) { return (L.st && L.st[s]) || stWords[s] || s; }
+    var saleCount = cards.filter(function (c) { return SALE_STATUSES[c.status]; }).length;
+    var defaultSaleOnly = saleCount > 0;
+
+    var contacts = [];
+    if (cfg.discord) contacts.push(['Discord', cfg.discord, linkify(cfg.discord, 'discord')]);
+    if (cfg.x) contacts.push(['X', cfg.x, linkify(cfg.x, 'x')]);
+    if (cfg.insta) contacts.push(['Instagram', cfg.insta, linkify(cfg.insta, 'insta')]);
+    if (cfg.market) contacts.push([t('srMarket'), cfg.market, linkify(cfg.market, 'url')]);
+
+    var cardHtml = cards.map(function (c) {
+      var sale = SALE_STATUSES[c.status];
+      var sold = c.status === 'sold';
+      var badge = '<span class="b b-' + c.status + '">' + esc(stWord(c.status)) + '</span>';
+      var priceHtml = '';
+      if (pro) {
+        if (sale && c.ask) priceHtml = '<div class="pr">' + esc(fm(c.ask, c.currency)) + '</div>';
+      }
+      var media = c.photo
+        ? (isCutout(c.photo)
+            ? '<div class="ph lit"><img class="cut" src="' + c.photo + '" alt=""></div>'
+            : '<div class="ph" style="background-image:url(' + c.photo + ')"></div>')
+        : '<div class="ph noimg">' + (CAT_ICON[c.category] || '📦') + '</div>';
+      return '<div class="card' + (sold ? ' sold' : '') + '" data-sale="' + (sale ? '1' : '0') + '">'
+        + media
+        + '<div class="bd">'
+        + '<div class="nm">' + esc(c.name) + '</div>'
+        + (c.series ? '<div class="sr">' + esc(c.series) + '</div>' : '')
+        + '<div class="rw">' + badge + priceHtml + '</div>'
+        + (c.notes ? '<div class="nt">' + esc(c.notes) + '</div>' : '')
+        + '</div></div>';
+    }).join('');
+
+    var contactHtml = contacts.length
+      ? '<div class="contacts"><div class="ct-h">' + esc(t('srPageContact')) + '</div><div class="ct-row">'
+        + contacts.map(function (k) {
+            return '<a class="ct" href="' + esc(k[2]) + '" target="_blank" rel="noopener">' + esc(k[0]) + '</a>';
+          }).join('')
+        + '</div></div>'
+      : '';
+
+    var toggleHtml = '<button class="toggle" id="tg" onclick="tog()"></button>';
+
+    var watermark = pro ? '' :
+      '<div class="wm"><a href="https://robin0725.github.io/merchvault/" target="_blank" rel="noopener">✨ ' + esc(t('srPageMade')) + '</a></div>';
+
+    var title = esc(cfg.name || t('scTitle'));
+    var seller = cfg.seller ? '<div class="seller">' + esc(cfg.seller) + '</div>' : '';
+
+    /* exported page is its own document — keep it lean, inline everything */
+    return '<!DOCTYPE html>\n<html lang="' + esc(CUR_LANG) + '"' + (RTL[CUR_LANG] ? ' dir="rtl"' : '') + '>\n<head>\n'
+      + '<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+      + '<title>' + title + ' — ' + esc(t('srPageMade')) + '</title>\n'
+      + '<style>\n'
+      + ':root{--ac:' + accent + ';--bg:#f7f0e7;--panel:#fffaf1;--ink:#211d1a;--muted:#6c625b;--faint:#a8998a;--border:#e6dccb;}\n'
+      + '*{box-sizing:border-box;}html,body{margin:0;padding:0;}\n'
+      + 'body{background:linear-gradient(120deg,rgba(131,183,161,.18),transparent 26%),linear-gradient(210deg,rgba(240,109,95,.14),transparent 30%),var(--bg);background-attachment:fixed;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;}\n'
+      + 'a{color:var(--ac);}\n'
+      + 'header{text-align:center;padding:34px 20px 14px;}\n'
+      + 'header .orn{color:#b58a45;font-size:15px;}\n'
+      + 'header h1{font-size:30px;font-weight:850;letter-spacing:-.6px;margin:6px 0 4px;}\n'
+      + '.seller{color:var(--muted);font-size:15px;}\n'
+      + '.contacts{max-width:760px;margin:14px auto 0;text-align:center;}\n'
+      + '.ct-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--faint);margin-bottom:7px;}\n'
+      + '.ct-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}\n'
+      + '.ct{text-decoration:none;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:7px 15px;font-size:13px;font-weight:650;color:var(--ink);box-shadow:0 1px 2px rgba(44,32,25,.06);}\n'
+      + '.ct:hover{border-color:var(--ac);}\n'
+      + '.barwrap{display:flex;justify-content:center;margin:20px 0 6px;}\n'
+      + '.toggle{border:1px solid var(--border);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;font-size:13px;font-weight:650;cursor:pointer;font-family:inherit;box-shadow:0 1px 2px rgba(44,32,25,.06);}\n'
+      + '.toggle:hover{border-color:var(--ac);}\n'
+      + 'main{max-width:1080px;margin:0 auto;padding:8px 18px 40px;}\n'
+      + '.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:16px;}\n'
+      + '.card{background:var(--panel);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 3px 8px rgba(44,32,25,.07),0 16px 40px rgba(44,32,25,.09);display:flex;flex-direction:column;}\n'
+      + '.card.sold{opacity:.72;}\n'
+      + '.ph{aspect-ratio:4/5;background:#fdf5ea center/cover no-repeat;display:flex;align-items:center;justify-content:center;}\n'
+      + '.ph.noimg{font-size:42px;background:radial-gradient(circle at 50% 36%,rgba(255,250,241,.95),transparent 58%),linear-gradient(150deg,rgba(131,183,161,.16),rgba(240,109,95,.15));}\n'
+      + '.ph.lit{background:radial-gradient(circle at 50% 24%,rgba(255,244,224,.22),transparent 56%),linear-gradient(160deg,#2c2521,#15110f);box-shadow:inset 0 0 0 1px rgba(181,138,69,.22);}\n'
+      + '.ph.lit img{max-width:86%;max-height:86%;object-fit:contain;}\n'
+      + '.cut{filter:drop-shadow(1.6px 0 0 #fff7ec) drop-shadow(-1.6px 0 0 #fff7ec) drop-shadow(0 1.6px 0 #fff7ec) drop-shadow(0 -1.6px 0 #fff7ec) drop-shadow(0 8px 14px rgba(0,0,0,.42));}\n'
+      + '.bd{padding:11px 12px 13px;display:flex;flex-direction:column;gap:5px;flex:1 1 auto;}\n'
+      + '.nm{font-weight:750;font-size:14.5px;line-height:1.25;}\n'
+      + '.sr{font-size:12.5px;color:var(--muted);}\n'
+      + '.rw{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:auto;padding-top:3px;flex-wrap:wrap;}\n'
+      + '.pr{font-weight:850;font-size:15px;letter-spacing:-.3px;color:#2f8f55;}\n'
+      + '.nt{font-size:12px;color:var(--muted);}\n'
+      + '.b{font-size:11px;font-weight:750;padding:3px 9px;border-radius:999px;white-space:nowrap;}\n'
+      + '.b-owned{background:#e3f0ea;color:#3f9277;}.b-transit{background:#f6ecd4;color:#bb8126;}\n'
+      + '.b-forsale{background:#dff3e6;color:#2f8f55;box-shadow:0 0 0 1px rgba(47,143,85,.22);}\n'
+      + '.b-reserved{background:#f6ecd4;color:#bb8126;}.b-sold{background:#ece6df;color:#97877a;text-decoration:line-through;}\n'
+      + '.hide{display:none!important;}\n'
+      + 'footer{border-top:1px solid var(--border);margin-top:24px;padding:24px 20px 40px;text-align:center;color:var(--muted);font-size:12.5px;}\n'
+      + 'footer a{color:var(--ac);text-decoration:none;font-weight:700;}\n'
+      + '.wm{position:fixed;bottom:12px;right:12px;background:rgba(255,250,241,.92);border:1px solid var(--border);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(44,32,25,.14);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);z-index:5;}\n'
+      + '.wm a{text-decoration:none;color:var(--ink);}\n'
+      + '@media(max-width:600px){header h1{font-size:24px;}.grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}}\n'
+      + '</style>\n</head>\n<body>\n'
+      + '<header><div class="orn">✦ ✦ ✦</div><h1>' + title + '</h1>' + seller + contactHtml + '</header>\n'
+      + '<div class="barwrap">' + toggleHtml + '</div>\n'
+      + '<main><div class="grid" id="grid">' + cardHtml + '</div></main>\n'
+      + '<footer><a href="https://robin0725.github.io/merchvault/" target="_blank" rel="noopener">✨ ' + esc(t('srPageMade')) + '</a></footer>\n'
+      + watermark
+      + '<script>(function(){var saleOnly=' + (defaultSaleOnly ? 'true' : 'false') + ';'
+      + 'var SHOW_SALE=' + JSON.stringify(t('srPageShowSale')) + ',SHOW_ALL=' + JSON.stringify(t('srPageShowAll')) + ';'
+      + 'var hasSale=document.querySelectorAll(\'.card[data-sale="1"]\').length>0;'
+      + 'window.tog=function(){saleOnly=!saleOnly;apply();};'
+      + 'function apply(){var cs=document.querySelectorAll(".card");for(var i=0;i<cs.length;i++){var s=cs[i].getAttribute("data-sale")==="1";cs[i].classList.toggle("hide",saleOnly&&!s);}document.getElementById("tg").textContent=saleOnly?SHOW_ALL:SHOW_SALE;}'
+      + 'var tg=document.getElementById("tg");if(!hasSale){saleOnly=false;tg.style.display="none";}apply();})();<\/script>\n'
+      + '</body>\n</html>';
+  }
+
+  /* turn a handle or partial into a usable URL for the contact buttons */
+  function linkify(v, kind) {
+    v = String(v || '').trim();
+    if (/^https?:\/\//i.test(v)) return v;
+    var handle = v.replace(/^@/, '');
+    if (kind === 'x') return 'https://x.com/' + encodeURIComponent(handle);
+    if (kind === 'insta') return 'https://instagram.com/' + encodeURIComponent(handle);
+    if (kind === 'discord') {
+      if (/discord\.(gg|com)/i.test(v)) return 'https://' + v.replace(/^https?:\/\//, '');
+      return 'https://discord.com/users/' + encodeURIComponent(handle);
+    }
+    return /^[\w.-]+\.[a-z]{2,}/i.test(v) ? 'https://' + v : v;
+  }
+
   /* ---------- lightbox (view an exhibit large) ---------- */
   function openLightbox(id) {
     var i = items.filter(function (x) { return x.id === id; })[0];
     if (!i) return;
     var st = i.status || 'owned', cat = i.category || 'other';
-    var bcls = st === 'owned' ? 'b-owned' : (st === 'transit' ? 'b-transit' : 'b-want');
+    var bcls = badgeClass(st);
     var cut = isCutout(i.photo);
     var inner = i.photo ? '<img class="' + (cut ? fxClass(i.fx || 'sticker') : '') + '" src="' + i.photo + '" alt="">' : medallion(cat);
     document.getElementById('lb-stage').innerHTML = inner;
@@ -1285,7 +1639,7 @@
   function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
   function lbEdit(id) { closeLightbox(); openEdit(id); }
 
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeItem(); closePro(); closePrivacy(); closeLightbox(); } });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeItem(); closePro(); closePrivacy(); closeLightbox(); closeShowroom(); } });
 
   /* ---------- boot ---------- */
   CUR_LANG = resolveLang();
