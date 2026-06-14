@@ -394,6 +394,20 @@
   .lb-plaque .lp-meta { margin-top: 12px; display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; }
   .lb-plaque .lp-price { font-size: 18px; font-weight: 820; }
   .lb-plaque .lp-edit { margin-top: 14px; }
+  .lp-status { margin-top: 14px; display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; }
+  .lp-st-chip {
+    border: 1px solid rgba(255,250,241,.28); background: rgba(255,250,241,.08); color: rgba(255,247,236,.85);
+    padding: 6px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 650; cursor: pointer; font-family: inherit;
+  }
+  .lp-st-chip:hover { background: rgba(255,250,241,.16); }
+  .lp-st-chip.on { background: #fff7ec; color: #2c2521; border-color: #fff7ec; }
+  .lp-ask { margin-top: 11px; }
+  .lp-ask input {
+    width: 170px; text-align: center; background: rgba(255,250,241,.1); border: 1px solid rgba(255,250,241,.32);
+    color: #fff7ec; border-radius: 10px; padding: 9px 11px; font-size: 16px; font-family: inherit;
+  }
+  .lp-ask input::placeholder { color: rgba(255,247,236,.5); }
+  .lp-ask input:focus { outline: none; border-color: #f0c074; box-shadow: 0 0 0 3px rgba(240,192,116,.2); }
 
   /* edge-style variants for cut-outs */
   .fxglow {
@@ -1690,13 +1704,34 @@
       + '<div class="lp-name">' + esc(i.name || t('untitled')) + '</div>'
       + (i.series ? '<div class="lp-series">' + esc(i.series) + '</div>' : '')
       + '<div class="lp-meta"><span class="lp-price">' + priceStr + '</span>'
-      + '<span class="badge ' + bcls + '">' + esc(stLabel(st)) + '</span>'
       + '<span class="cat-tag" style="position:static;background:rgba(255,250,241,.16)">' + esc(catShort(cat)) + '</span></div>'
+      + '<div class="lp-status">' + ['owned', 'forsale', 'reserved', 'sold'].map(function (s) {
+          return '<button type="button" class="lp-st-chip' + (st === s ? ' on' : '') + '" onclick="lbSetStatus(\'' + i.id + '\',\'' + s + '\')">' + esc(stLabel(s)) + '</button>';
+        }).join('') + '</div>'
+      + (SALE_STATUSES[st]
+          ? '<div class="lp-ask"><input type="number" inputmode="decimal" step="0.01" min="0" placeholder="' + esc(t('fldAskPrice')) + '" value="' + (i.askPrice != null && i.askPrice !== '' ? esc(i.askPrice) : '') + '" oninput="lbSetAsk(\'' + i.id + '\',this.value)"></div>'
+          : '')
       + '<div class="lp-edit"><button class="btn ghost" onclick="lbEdit(\'' + i.id + '\')">' + esc(t('editHint')) + '</button></div>';
     document.getElementById('lightbox').classList.add('show');
   }
   function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
   function lbEdit(id) { closeLightbox(); openEdit(id); }
+  /* quick status switch straight from the lightbox — no need to open the full editor */
+  function lbSetStatus(id, st) {
+    var i = items.filter(function (x) { return x.id === id; })[0];
+    if (!i) return;
+    i.status = st;
+    save();
+    openLightbox(id); /* rebuild chips + show/hide the asking-price box */
+    render();
+  }
+  function lbSetAsk(id, val) {
+    var i = items.filter(function (x) { return x.id === id; })[0];
+    if (!i) return;
+    i.askPrice = val;
+    save();
+    render(); /* keeps the gallery price in sync; lightbox input keeps focus */
+  }
 
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeItem(); closePro(); closePrivacy(); closeLightbox(); closeShowroom(); } });
 
