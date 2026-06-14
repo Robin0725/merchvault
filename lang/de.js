@@ -23,6 +23,7 @@ window.MV_LANG['de'] = {
   noMatch: 'Nichts passt zu diesem Filter.',
   untitled: '(ohne Titel)',
   editHint: 'Bearbeiten',
+  shelfLabel: 'Dein Regal',
   modalAdd: 'Stück hinzufügen',
   modalEdit: 'Stück bearbeiten',
   fldName: 'Name',

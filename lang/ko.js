@@ -23,6 +23,7 @@ window.MV_LANG['ko'] = {
   noMatch: '이 필터에 맞는 항목이 없습니다.',
   untitled: '(제목 없음)',
   editHint: '편집',
+  shelfLabel: '내 선반',
   modalAdd: '굿즈 추가',
   modalEdit: '굿즈 편집',
   fldName: '이름',

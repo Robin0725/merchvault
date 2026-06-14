@@ -23,6 +23,7 @@ window.MV_LANG['ru'] = {
   noMatch: 'Под этот фильтр ничего не подходит.',
   untitled: '(без названия)',
   editHint: 'Изменить',
+  shelfLabel: 'Твоя полка',
   modalAdd: 'Добавить предмет',
   modalEdit: 'Изменить предмет',
   fldName: 'Название',

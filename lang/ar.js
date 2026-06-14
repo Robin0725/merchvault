@@ -23,6 +23,7 @@ window.MV_LANG['ar'] = {
   noMatch: 'لا شيء يطابق هذا الفلتر.',
   untitled: '(بلا عنوان)',
   editHint: 'تعديل',
+  shelfLabel: 'رفّك',
   modalAdd: 'إضافة قطعة',
   modalEdit: 'تعديل القطعة',
   fldName: 'الاسم',

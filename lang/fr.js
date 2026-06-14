@@ -23,6 +23,7 @@ window.MV_LANG['fr'] = {
   noMatch: 'Rien ne correspond à ce filtre.',
   untitled: '(sans titre)',
   editHint: 'Modifier',
+  shelfLabel: 'Ton étagère',
   modalAdd: 'Ajouter une pièce',
   modalEdit: 'Modifier la pièce',
   fldName: 'Nom',

@@ -23,6 +23,7 @@ window.MV_LANG['id'] = {
   noMatch: 'Tidak ada yang cocok dengan filter itu.',
   untitled: '(tanpa judul)',
   editHint: 'Edit',
+  shelfLabel: 'Rakmu',
   modalAdd: 'Tambah item',
   modalEdit: 'Edit item',
   fldName: 'Nama',

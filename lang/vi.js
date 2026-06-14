@@ -23,6 +23,7 @@ window.MV_LANG['vi'] = {
   noMatch: 'Không có gì khớp với bộ lọc đó.',
   untitled: '(chưa đặt tên)',
   editHint: 'Sửa',
+  shelfLabel: 'Kệ của bạn',
   modalAdd: 'Thêm một món',
   modalEdit: 'Sửa món',
   fldName: 'Tên',

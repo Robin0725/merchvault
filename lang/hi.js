@@ -23,6 +23,7 @@ window.MV_LANG['hi'] = {
   noMatch: 'इस फ़िल्टर से कुछ मेल नहीं खाता।',
   untitled: '(बिना नाम)',
   editHint: 'एडिट करें',
+  shelfLabel: 'तुम्हारी शेल्फ़',
   modalAdd: 'एक आइटम जोड़ें',
   modalEdit: 'आइटम एडिट करें',
   fldName: 'नाम',

@@ -23,6 +23,7 @@ window.MV_LANG['ja'] = {
   noMatch: 'この条件に合うものはありません。',
   untitled: '（無題）',
   editHint: '編集',
+  shelfLabel: 'マイコレクション棚',
   modalAdd: '1点を追加',
   modalEdit: '編集',
   fldName: '名前',

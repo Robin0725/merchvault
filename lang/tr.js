@@ -23,6 +23,7 @@ window.MV_LANG['tr'] = {
   noMatch: 'Bu filtreyle eşleşen bir şey yok.',
   untitled: '(başlıksız)',
   editHint: 'Düzenle',
+  shelfLabel: 'Rafın',
   modalAdd: 'Parça ekle',
   modalEdit: 'Parçayı düzenle',
   fldName: 'İsim',

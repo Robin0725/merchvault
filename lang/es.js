@@ -23,6 +23,7 @@ window.MV_LANG['es'] = {
   noMatch: 'Nada coincide con ese filtro.',
   untitled: '(sin título)',
   editHint: 'Editar',
+  shelfLabel: 'Tu estantería',
   modalAdd: 'Añadir una pieza',
   modalEdit: 'Editar pieza',
   fldName: 'Nombre',

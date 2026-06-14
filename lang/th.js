@@ -23,6 +23,7 @@ window.MV_LANG['th'] = {
   noMatch: 'ไม่มีอะไรตรงกับตัวกรองนี้',
   untitled: '(ไม่มีชื่อ)',
   editHint: 'แก้ไข',
+  shelfLabel: 'ชั้นของคุณ',
   modalAdd: 'เพิ่มชิ้นงาน',
   modalEdit: 'แก้ไขชิ้นงาน',
   fldName: 'ชื่อ',

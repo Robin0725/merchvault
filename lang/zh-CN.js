@@ -23,6 +23,7 @@ window.MV_LANG['zh-CN'] = {
   noMatch: '没有符合这个筛选的内容。',
   untitled: '（未命名）',
   editHint: '编辑',
+  shelfLabel: '我的收藏架',
   modalAdd: '添加一件',
   modalEdit: '编辑',
   fldName: '名称',
