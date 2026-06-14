@@ -82,7 +82,7 @@
   .head-right { display: flex; align-items: center; gap: 9px; }
   .lang-sel {
     border: 1px solid var(--border); background: var(--panel); color: var(--ink-soft);
-    border-radius: 999px; padding: 7px 11px; font-size: 13px; font-weight: 600;
+    border-radius: 999px; padding: 7px 11px; font-size: 16px; font-weight: 600;
     font-family: inherit; cursor: pointer; max-width: 140px;
   }
   .lang-sel:hover { border-color: #ddd0bb; }
@@ -127,9 +127,9 @@
   .search { flex: 1 1 200px; max-width: 300px; }
   input[type=text], input[type=number], input[type=date], select, textarea {
     width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px;
-    font-size: 14px; font-family: inherit; background: #fffdf8; color: var(--ink);
+    font-size: 16px; font-family: inherit; background: #fffdf8; color: var(--ink);
     transition: border-color .14s, box-shadow .14s;
-  }
+  } /* 16px = stops iOS Safari from auto-zooming the page on input focus */
   textarea { resize: vertical; min-height: 64px; }
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(239,109,95,.16); }
   .search { box-shadow: var(--shadow-sm); }
