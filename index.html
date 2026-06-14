@@ -389,6 +389,34 @@
   .lb-plaque .lp-meta { margin-top: 12px; display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; }
   .lb-plaque .lp-price { font-size: 18px; font-weight: 820; }
   .lb-plaque .lp-edit { margin-top: 14px; }
+
+  /* edge-style variants for cut-outs */
+  .fxglow {
+    filter: drop-shadow(0 8px 14px rgba(0,0,0,.42)) drop-shadow(0 0 9px rgba(255,205,150,.65)) drop-shadow(0 0 20px rgba(255,180,120,.5));
+  }
+  .fxnone { filter: drop-shadow(0 8px 14px rgba(0,0,0,.4)); }
+  .plainphoto { filter: drop-shadow(0 6px 12px rgba(0,0,0,.3)); }
+
+  /* editor: big live preview of the result + edge-style picker */
+  .photo-stage {
+    width: 100%; aspect-ratio: 4 / 5; max-height: 230px; margin: 0 auto; border-radius: 14px; cursor: zoom-in;
+    display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--panel-2);
+  }
+  .photo-stage.lit {
+    background:
+      radial-gradient(circle at 50% 20%, rgba(255,244,224,.30), transparent 54%),
+      linear-gradient(160deg, #2c2521, #14100e);
+    box-shadow: inset 0 0 0 1px rgba(181,138,69,.3);
+  }
+  .photo-stage img { max-width: 84%; max-height: 84%; object-fit: contain; }
+  .fx-row { display: flex; align-items: center; gap: 7px; margin-top: 11px; flex-wrap: wrap; justify-content: center; }
+  .fx-label { font-size: 12px; color: var(--muted); font-weight: 650; margin-inline-end: 2px; }
+  .fx-chip {
+    border: 1px solid var(--border); background: var(--panel); color: var(--muted);
+    padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 650; cursor: pointer; font-family: inherit;
+  }
+  .fx-chip:hover { border-color: var(--brass); color: var(--ink); }
+  .fx-chip.on { background: var(--brass-soft); border-color: var(--brass); color: var(--brass-deep); }
 </style>
 </head>
 <body>
@@ -445,14 +473,24 @@
   <div class="modal">
     <h3 id="itemTitle">Add an item</h3>
     <div class="field">
-      <div class="photo-zone" onclick="document.getElementById('f-photo').click()">
-        <div class="photo-prev-lg" id="f-photo-prev">📷</div>
+      <div class="photo-zone" id="f-photo-zone" onclick="document.getElementById('f-photo').click()">
+        <div class="photo-prev-lg">📷</div>
         <div class="pz-hint" data-i18n="fldPhoto">Photo (stays on your device)</div>
       </div>
       <input type="file" id="f-photo" accept="image/*" style="display:none" onchange="onPhoto(event)">
-      <div class="photo-actions" id="f-photo-actions" style="display:none">
-        <button class="btn ghost" type="button" id="f-bg" data-i18n="removeBg" onclick="removeBg()">✨ Remove background</button>
-        <button class="link-btn" type="button" id="f-photo-clear" data-i18n="removePhoto" onclick="clearPhoto()">Remove</button>
+      <div id="f-photo-filled" style="display:none">
+        <div class="photo-stage" id="f-photo-stage" onclick="openPhotoView()"></div>
+        <div class="fx-row" id="f-fx-row" style="display:none">
+          <span class="fx-label" data-i18n="fxLabel">Edge style</span>
+          <button type="button" class="fx-chip" data-fx="sticker" onclick="setFx('sticker')" data-i18n="fxSticker">Sticker</button>
+          <button type="button" class="fx-chip" data-fx="glow" onclick="setFx('glow')" data-i18n="fxGlow">Glow</button>
+          <button type="button" class="fx-chip" data-fx="none" onclick="setFx('none')" data-i18n="fxNone">None</button>
+        </div>
+        <div class="photo-actions">
+          <button class="btn ghost" type="button" id="f-bg" data-i18n="removeBg" onclick="removeBg()">✨ Remove background</button>
+          <button class="link-btn" type="button" data-i18n="choosePhoto" onclick="document.getElementById('f-photo').click()">Choose photo</button>
+          <button class="link-btn" type="button" id="f-photo-clear" data-i18n="removePhoto" onclick="clearPhoto()">Remove</button>
+        </div>
       </div>
     </div>
     <div class="field">
@@ -580,6 +618,10 @@
     removingBg: 'Removing background…',
     bgFailed: "Background removal didn't finish — we reset it, please try again (use Wi-Fi, and keep the screen on while it downloads).",
     bgFirstWarn: "First time only: this downloads a one-time AI model (about 40 MB) so cut-outs then work instantly and offline. On mobile data it can take a few minutes — Wi-Fi is best, and please keep this screen on. Start now?",
+    fxLabel: 'Edge style',
+    fxSticker: 'Sticker',
+    fxGlow: 'Glow',
+    fxNone: 'None',
     st: { owned: 'Owned', transit: 'In transit', want: 'Wishlist' },
     cat: { figure: 'Figure', acrylic: 'Acrylic', badge: 'Badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag', other: 'Other' },
     catSel: { figure: 'Figure', acrylic: 'Acrylic stand', badge: 'Can badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag part', other: 'Other' },
@@ -724,6 +766,9 @@
   var editingId = null;
   var pendingPhoto = null;
   var pendingFav = false;
+  var pendingFx = 'sticker';
+  function fxClass(fx) { return fx === 'glow' ? 'fxglow' : (fx === 'none' ? 'fxnone' : 'cut'); }
+  function isCutout(p) { return p && p.indexOf('data:image/png') === 0; }
   var filterStatus = 'all';
   var filterCat = 'all';
 
@@ -818,8 +863,8 @@
     var bcls = st === 'owned' ? 'b-owned' : (st === 'transit' ? 'b-transit' : 'b-want');
     var thumb;
     if (i.photo) {
-      thumb = (i.photo.indexOf('data:image/png') === 0)
-        ? '<div class="thumb lit"><img class="cut" src="' + i.photo + '" alt=""></div>'   /* cutout → spotlit niche + sticker stroke */
+      thumb = isCutout(i.photo)
+        ? '<div class="thumb lit"><img class="' + fxClass(i.fx || 'sticker') + '" src="' + i.photo + '" alt=""></div>'   /* cutout → spotlit niche + chosen edge style */
         : '<div class="thumb" style="background-image:url(' + i.photo + ')"></div>';
     } else {
       thumb = '<div class="thumb ph">' + medallion(cat) + '</div>';
@@ -845,8 +890,8 @@
   function centerpieceHTML(i) {
     var st = i.status || 'owned', cat = i.category || 'other';
     var bcls = st === 'owned' ? 'b-owned' : (st === 'transit' ? 'b-transit' : 'b-want');
-    var cut = i.photo && i.photo.indexOf('data:image/png') === 0;
-    var inner = i.photo ? '<img class="cp-img' + (cut ? ' cut' : '') + '" src="' + i.photo + '" alt="">' : medallion(cat);
+    var cut = isCutout(i.photo);
+    var inner = i.photo ? '<img class="cp-img' + (cut ? ' ' + fxClass(i.fx || 'sticker') : '') + '" src="' + i.photo + '" alt="">' : medallion(cat);
     var stage = '<div class="cp-stage' + (i.photo ? ' has-photo' : '') + '" onclick="openLightbox(\'' + i.id + '\')">' + inner + '</div>';
     var priceStr = Number(i.price) ? fmtMoney(i.price, i.currency) : (st === 'want' ? esc(stLabel('want')) : '—');
     return '<div class="cp">'
@@ -913,7 +958,7 @@
   function toggleFav() { pendingFav = !pendingFav; setFavUI(); }
   function openAdd() {
     if (items.length >= FREE_CAP) { openPro(); return; }
-    editingId = null; pendingPhoto = null; pendingFav = (items.length === 0);
+    editingId = null; pendingPhoto = null; pendingFav = (items.length === 0); pendingFx = 'sticker';
     document.getElementById('itemTitle').textContent = t('modalAdd');
     document.getElementById('f-name').value = '';
     document.getElementById('f-series').value = '';
@@ -932,7 +977,7 @@
   function openEdit(id) {
     var it = items.filter(function (x) { return x.id === id; })[0];
     if (!it) return;
-    editingId = id; pendingPhoto = it.photo || null; pendingFav = !!it.favorite;
+    editingId = id; pendingPhoto = it.photo || null; pendingFav = !!it.favorite; pendingFx = it.fx || 'sticker';
     document.getElementById('itemTitle').textContent = t('modalEdit');
     document.getElementById('f-name').value = it.name || '';
     document.getElementById('f-series').value = it.series || '';
@@ -961,7 +1006,8 @@
       channel: document.getElementById('f-channel').value.trim(),
       notes: document.getElementById('f-notes').value.trim(),
       photo: pendingPhoto || null,
-      favorite: !!pendingFav
+      favorite: !!pendingFav,
+      fx: pendingFx
     };
     if (!obj.name) { document.getElementById('f-name').focus(); return; }
     if (editingId) { items = items.map(function (x) { return x.id === editingId ? obj : x; }); }
@@ -1001,10 +1047,37 @@
     reader.readAsDataURL(file);
   }
   function setPhotoPreview(data) {
-    var prev = document.getElementById('f-photo-prev');
-    var actions = document.getElementById('f-photo-actions');
-    if (data) { prev.style.backgroundImage = 'url(' + data + ')'; prev.classList.add('has'); prev.textContent = ''; actions.style.display = 'flex'; }
-    else { prev.style.backgroundImage = 'none'; prev.classList.remove('has'); prev.textContent = '📷'; actions.style.display = 'none'; }
+    var zone = document.getElementById('f-photo-zone');
+    var filled = document.getElementById('f-photo-filled');
+    var stage = document.getElementById('f-photo-stage');
+    var fxRow = document.getElementById('f-fx-row');
+    if (data) {
+      zone.style.display = 'none';
+      filled.style.display = 'block';
+      var cut = isCutout(data);
+      stage.className = 'photo-stage' + (cut ? ' lit' : '');
+      stage.innerHTML = '<img class="' + (cut ? fxClass(pendingFx) : 'plainphoto') + '" src="' + data + '" alt="">';
+      fxRow.style.display = cut ? 'flex' : 'none';
+      if (cut) updateFxChips();
+    } else {
+      zone.style.display = 'flex';
+      filled.style.display = 'none';
+    }
+  }
+  function updateFxChips() {
+    var chips = document.querySelectorAll('#f-fx-row .fx-chip');
+    for (var i = 0; i < chips.length; i++) {
+      if (chips[i].getAttribute('data-fx') === pendingFx) chips[i].classList.add('on');
+      else chips[i].classList.remove('on');
+    }
+  }
+  function setFx(s) { pendingFx = s; setPhotoPreview(pendingPhoto); }
+  function openPhotoView() {
+    if (!pendingPhoto) return;
+    var cut = isCutout(pendingPhoto);
+    document.getElementById('lb-stage').innerHTML = '<img class="' + (cut ? fxClass(pendingFx) : '') + '" src="' + pendingPhoto + '" alt="">';
+    document.getElementById('lb-plaque').innerHTML = '';
+    document.getElementById('lightbox').classList.add('show');
   }
   function clearPhoto() { pendingPhoto = null; setPhotoPreview(null); }
 
@@ -1195,8 +1268,8 @@
     if (!i) return;
     var st = i.status || 'owned', cat = i.category || 'other';
     var bcls = st === 'owned' ? 'b-owned' : (st === 'transit' ? 'b-transit' : 'b-want');
-    var cut = i.photo && i.photo.indexOf('data:image/png') === 0;
-    var inner = i.photo ? '<img class="' + (cut ? 'cut' : '') + '" src="' + i.photo + '" alt="">' : medallion(cat);
+    var cut = isCutout(i.photo);
+    var inner = i.photo ? '<img class="' + (cut ? fxClass(i.fx || 'sticker') : '') + '" src="' + i.photo + '" alt="">' : medallion(cat);
     document.getElementById('lb-stage').innerHTML = inner;
     var priceStr = Number(i.price) ? fmtMoney(i.price, i.currency) : (st === 'want' ? esc(stLabel('want')) : '—');
     document.getElementById('lb-plaque').innerHTML =
