@@ -30,6 +30,7 @@ window.MV_LANG['id'] = {
   removeBg: '✨ Hapus latar',
   removingBg: 'Menghapus latar…',
   bgFailed: 'Gagal menghapus latar — menyimpan foto aslimu.',
+  bgFirstWarn: 'Hanya pertama kali: kami mengunduh model AI sekali pakai (sekitar 40 MB) agar hapus latar lalu bekerja instan dan offline. Dengan data seluler bisa beberapa menit — sebaiknya Wi-Fi, dan biarkan layar tetap menyala. Mulai sekarang?',
   modalAdd: 'Tambah item',
   modalEdit: 'Edit item',
   fldName: 'Nama',

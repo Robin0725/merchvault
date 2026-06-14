@@ -30,6 +30,7 @@ window.MV_LANG['ko'] = {
   removeBg: '✨ 배경 제거',
   removingBg: '배경 제거 중…',
   bgFailed: '배경을 제거하지 못했어요 — 원본을 유지할게요.',
+  bgFirstWarn: '처음 한 번만: 일회성 AI 모델(약 40MB)을 내려받아요. 이후엔 배경 제거가 즉시·오프라인으로 작동해요. 모바일 데이터에서는 몇 분 걸릴 수 있어요 — Wi-Fi를 권장하고 화면을 켠 상태로 두세요. 시작할까요?',
   modalAdd: '굿즈 추가',
   modalEdit: '굿즈 편집',
   fldName: '이름',

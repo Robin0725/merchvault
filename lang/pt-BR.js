@@ -30,6 +30,7 @@ window.MV_LANG['pt-BR'] = {
   removeBg: '✨ Remover fundo',
   removingBg: 'Removendo o fundo…',
   bgFailed: 'Não deu para remover o fundo — mantivemos seu original.',
+  bgFirstWarn: 'Só na primeira vez: baixamos um modelo de IA único (cerca de 40 MB) para os recortes funcionarem na hora e offline. No 4G pode levar alguns minutos — melhor no Wi-Fi e mantenha a tela ligada. Começar?',
   modalAdd: 'Adicionar uma peça',
   modalEdit: 'Editar peça',
   fldName: 'Nome',

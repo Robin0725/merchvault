@@ -30,6 +30,7 @@ window.MV_LANG['de'] = {
   removeBg: '✨ Hintergrund entfernen',
   removingBg: 'Hintergrund wird entfernt…',
   bgFailed: 'Hintergrund ließ sich nicht entfernen — Original bleibt erhalten.',
+  bgFirstWarn: 'Nur beim ersten Mal: Es wird ein einmaliges KI-Modell (ca. 40 MB) geladen, danach läuft das Freistellen sofort und offline. Mit mobilen Daten kann es ein paar Minuten dauern — am besten WLAN, und lass diesen Bildschirm an. Jetzt starten?',
   modalAdd: 'Stück hinzufügen',
   modalEdit: 'Stück bearbeiten',
   fldName: 'Name',

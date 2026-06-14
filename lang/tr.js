@@ -30,6 +30,7 @@ window.MV_LANG['tr'] = {
   removeBg: '✨ Arka planı kaldır',
   removingBg: 'Arka plan kaldırılıyor…',
   bgFailed: 'Arka plan kaldırılamadı — orijinali koruduk.',
+  bgFirstWarn: 'Yalnızca ilk seferde: tek seferlik bir yapay zekâ modeli (yaklaşık 40 MB) indirilir; sonrasında arka plan kaldırma anında ve çevrimdışı çalışır. Mobil veride birkaç dakika sürebilir — Wi-Fi önerilir ve lütfen ekranı açık tutun. Başlansın mı?',
   modalAdd: 'Parça ekle',
   modalEdit: 'Parçayı düzenle',
   fldName: 'İsim',

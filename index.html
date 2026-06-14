@@ -534,8 +534,9 @@
     makeFeatured: 'Set as centerpiece',
     galleryNamePrompt: 'Name your collection',
     removeBg: '✨ Remove background',
-    removingBg: 'Removing background… (first time downloads a one-time model)',
-    bgFailed: "Couldn't remove the background — keeping your original.",
+    removingBg: 'Removing background…',
+    bgFailed: "Background removal didn't finish — we reset it, please try again (use Wi-Fi, and keep the screen on while it downloads).",
+    bgFirstWarn: "First time only: this downloads a one-time AI model (about 40 MB) so cut-outs then work instantly and offline. On mobile data it can take a few minutes — Wi-Fi is best, and please keep this screen on. Start now?",
     st: { owned: 'Owned', transit: 'In transit', want: 'Wishlist' },
     cat: { figure: 'Figure', acrylic: 'Acrylic', badge: 'Badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag', other: 'Other' },
     catSel: { figure: 'Figure', acrylic: 'Acrylic stand', badge: 'Can badge', keychain: 'Keychain', photocard: 'Photocard', plush: 'Plush', itabag: 'Ita-bag part', other: 'Other' },
@@ -965,17 +966,44 @@
 
   /* ---------- AI background removal (runs fully in-browser; the photo never leaves the device) ---------- */
   var bgBusy = false;
+  var BG_READY = 'merchvault_bg_ready';
+  /* The model is cached via the Cache Storage API. If a download is interrupted (e.g. the phone
+     locks mid-download) the cached model can be left corrupt, making every later attempt fail —
+     so on any failure we wipe caches and the ready flag, guaranteeing a clean re-download next time.
+     This app uses no other Cache Storage, so clearing all of it is safe. */
+  function clearBgCache() {
+    try { if (window.caches && caches.keys) { caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }); } } catch (e) {}
+    try { localStorage.removeItem(BG_READY); } catch (e) {}
+  }
   function removeBg() {
     if (!pendingPhoto || bgBusy) return;
+    var ready = false;
+    try { ready = localStorage.getItem(BG_READY) === '1'; } catch (e) {}
+    if (!ready && !confirm(t('bgFirstWarn'))) return;
     bgBusy = true;
     var btn = document.getElementById('f-bg');
     var src = pendingPhoto;
     btn.disabled = true; btn.textContent = t('removingBg');
-    import('https://esm.sh/@imgly/background-removal@1.5.8').then(function (mod) {
+    /* keep the screen awake so a mid-download lock doesn't corrupt the model */
+    var wake = null;
+    try { if (navigator.wakeLock && navigator.wakeLock.request) { navigator.wakeLock.request('screen').then(function (w) { wake = w; }, function () {}); } } catch (e) {}
+    var to = null;
+    var work = import('https://esm.sh/@imgly/background-removal@1.5.8').then(function (mod) {
       var fn = mod.removeBackground || (mod.default && mod.default.removeBackground) || mod.default;
       if (typeof fn !== 'function') throw new Error('lib');
-      return fn(src, { model: 'isnet_quint8', output: { format: 'image/png' } });
-    }).then(function (blob) {
+      return fn(src, {
+        model: 'isnet_quint8',
+        output: { format: 'image/png' },
+        progress: function (key, cur, total) {
+          if (/fetch/i.test(key) && total) {
+            var p = Math.min(99, Math.round(cur / total * 100));
+            btn.textContent = t('removingBg') + ' ' + p + '%';
+          }
+        }
+      });
+    });
+    var timeoutP = new Promise(function (_, rej) { to = setTimeout(function () { rej(new Error('timeout')); }, 360000); });
+    Promise.race([work, timeoutP]).then(function (blob) {
       return new Promise(function (res, rej) {
         var fr = new FileReader();
         fr.onload = function () { res(fr.result); };
@@ -983,14 +1011,18 @@
         fr.readAsDataURL(blob);
       });
     }).then(function (dataUrl) {
+      try { localStorage.setItem(BG_READY, '1'); } catch (e) {}
       pendingPhoto = dataUrl;
       setPhotoPreview(dataUrl);
     }).catch(function () {
+      clearBgCache();
       alert(t('bgFailed'));
     }).then(function () {
+      if (to) clearTimeout(to);
       bgBusy = false;
       btn.disabled = false;
       btn.textContent = t('removeBg');
+      try { if (wake && wake.release) wake.release(); } catch (e) {}
     });
   }
 
