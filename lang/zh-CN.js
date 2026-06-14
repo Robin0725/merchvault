@@ -83,6 +83,7 @@ window.MV_LANG['zh-CN'] = {
   scTitle: '我的收藏',
   scItems: '{n} 件',
   addFirst: '先添加几件吧。',
+  storageFull: '这台设备的存储满了——没保存上。先用 CSV 导出备份，再删几张照片或几件，腾点空间。',
   showroomBtn: '🏬 出售橱窗',
   fldAskPrice: '出售价（标价）',
   srTitle: '导出出售橱窗',

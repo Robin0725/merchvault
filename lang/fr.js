@@ -111,5 +111,6 @@ window.MV_LANG['fr'] = {
   footFamily: "Membre d'une famille d'outils à achat unique :",
   scTitle: 'Ma collection',
   scItems: '{n} pièces',
-  addFirst: "Ajoutez d'abord quelques pièces."
+  addFirst: "Ajoutez d'abord quelques pièces.",
+  storageFull: "Le stockage de cet appareil est plein — impossible d'enregistrer. Exporte une sauvegarde CSV, puis supprime quelques photos ou pièces pour libérer de l'espace.",
 };

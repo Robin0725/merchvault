@@ -111,5 +111,6 @@ window.MV_LANG['tr'] = {
   footFamily: 'Tek seferlik satın alınan araçlar ailesinin bir parçası:',
   scTitle: 'Koleksiyonum',
   scItems: '{n} parça',
-  addFirst: 'Önce birkaç parça ekle.'
+  addFirst: 'Önce birkaç parça ekle.',
+  storageFull: 'Bu cihazın depolaması dolu — kaydedilemedi. CSV yedeği al, sonra yer açmak için birkaç fotoğraf veya parça sil.',
 };

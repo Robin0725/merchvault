@@ -320,7 +320,7 @@
   }
   .cp .cp-img {
     max-width: 86%; max-height: 86%; object-fit: contain; position: relative; z-index: 1;
-    filter: drop-shadow(0 10px 18px rgba(0,0,0,.5)) drop-shadow(0 0 13px rgba(255,186,128,.42));
+    /* filter comes from the per-item edge class (.cut / .fxglow / .fxnone / .plainphoto) */
   }
   @keyframes cpAura {
     0%, 100% { box-shadow: inset 0 0 0 1px rgba(181,138,69,.32), inset 0 -34px 54px -26px rgba(0,0,0,.65), 0 0 22px rgba(240,109,95,.20), 0 0 50px rgba(181,138,69,.13); }
@@ -340,7 +340,7 @@
   }
   .card .thumb.lit img {
     max-width: 86%; max-height: 86%; object-fit: contain;
-    filter: drop-shadow(0 6px 12px rgba(0,0,0,.42)) drop-shadow(0 0 9px rgba(255,186,128,.36));
+    /* filter comes from the per-item edge class (.cut / .fxglow / .fxnone) */
   }
 
   /* photo-first drop zone in the editor */
@@ -931,7 +931,10 @@
     });
     return arr;
   }
-  function save() { localStorage.setItem(KEY, JSON.stringify(items)); }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(items)); }
+    catch (e) { if (e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014)) alert(t('storageFull')); }
+  }
   function getTitle() { try { return localStorage.getItem(TITLE_KEY) || ''; } catch (e) { return ''; } }
   function setTitle(v) { try { localStorage.setItem(TITLE_KEY, v); } catch (e) {} }
   function getShowroom() {
@@ -1055,7 +1058,7 @@
     var st = i.status || 'owned', cat = i.category || 'other';
     var bcls = badgeClass(st);
     var cut = isCutout(i.photo);
-    var inner = i.photo ? '<img class="cp-img' + (cut ? ' ' + fxClass(i.fx || 'sticker') : '') + '"' + (cut ? fxStyleAttr(i) : '') + ' src="' + i.photo + '" alt="">' : medallion(cat);
+    var inner = i.photo ? '<img class="cp-img' + (cut ? ' ' + fxClass(i.fx || 'sticker') : ' plainphoto') + '"' + (cut ? fxStyleAttr(i) : '') + ' src="' + i.photo + '" alt="">' : medallion(cat);
     var stage = '<div class="cp-stage' + (i.photo ? ' has-photo' : '') + '" onclick="openLightbox(\'' + i.id + '\')">' + inner + '</div>';
     var priceStr = Number(i.price) ? fmtMoney(i.price, i.currency) : (st === 'want' ? esc(stLabel('want')) : '—');
     return '<div class="cp">'
@@ -1282,10 +1285,25 @@
   var BG_READY = 'merchvault_bg_ready';
   /* The model is cached via the Cache Storage API. If a download is interrupted (e.g. the phone
      locks mid-download) the cached model can be left corrupt, making every later attempt fail —
-     so on any failure we wipe caches and the ready flag, guaranteeing a clean re-download next time.
-     This app uses no other Cache Storage, so clearing all of it is safe. */
+     so on any failure we drop the AI model's cached responses + the ready flag for a clean re-download.
+     CacheStorage is shared across the whole origin (robin0725.github.io hosts sibling tools), so we
+     delete ONLY entries that belong to the background-removal model, never the entire cache. */
   function clearBgCache() {
-    try { if (window.caches && caches.keys) { caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }); } } catch (e) {}
+    try {
+      if (window.caches && caches.keys) {
+        caches.keys().then(function (names) {
+          names.forEach(function (n) {
+            caches.open(n).then(function (c) {
+              c.keys().then(function (reqs) {
+                reqs.forEach(function (req) {
+                  if (/imgly|staticimgly|background-removal|\.onnx|\.wasm/i.test(req.url)) c.delete(req);
+                });
+              });
+            });
+          });
+        });
+      }
+    } catch (e) {}
     try { localStorage.removeItem(BG_READY); } catch (e) {}
   }
   /* Wipe the faint semi-transparent halo the model leaves at the edges, so the sticker stroke sits clean. */
@@ -1326,8 +1344,9 @@
     var src = pendingPhoto;
     btn.disabled = true; btn.textContent = t('removingBg');
     /* keep the screen awake so a mid-download lock doesn't corrupt the model */
-    var wake = null;
-    try { if (navigator.wakeLock && navigator.wakeLock.request) { navigator.wakeLock.request('screen').then(function (w) { wake = w; }, function () {}); } } catch (e) {}
+    var wake = null, wakeReleased = false;
+    function releaseWake() { wakeReleased = true; if (wake && wake.release) { try { wake.release(); } catch (e) {} wake = null; } }
+    try { if (navigator.wakeLock && navigator.wakeLock.request) { navigator.wakeLock.request('screen').then(function (w) { wake = w; if (wakeReleased) releaseWake(); }, function () {}); } } catch (e) {}
     var to = null;
     var work = import('https://esm.sh/@imgly/background-removal@1.5.8').then(function (mod) {
       var fn = mod.removeBackground || (mod.default && mod.default.removeBackground) || mod.default;
@@ -1348,17 +1367,18 @@
       return cleanCutout(blob);
     }).then(function (dataUrl) {
       try { localStorage.setItem(BG_READY, '1'); } catch (e) {}
+      if (pendingPhoto !== src) return; /* user changed/cleared the photo mid-removal — don't clobber it */
       pendingPhoto = dataUrl;
       setPhotoPreview(dataUrl);
     }).catch(function () {
       clearBgCache();
-      alert(t('bgFailed'));
+      if (pendingPhoto === src) alert(t('bgFailed'));
     }).then(function () {
       if (to) clearTimeout(to);
       bgBusy = false;
       btn.disabled = false;
       btn.textContent = t('removeBg');
-      try { if (wake && wake.release) wake.release(); } catch (e) {}
+      releaseWake();
     });
   }
 
@@ -1601,7 +1621,9 @@
     var contactHtml = contacts.length
       ? '<div class="contacts"><div class="ct-h">' + esc(t('srPageContact')) + '</div><div class="ct-row">'
         + contacts.map(function (k) {
-            return '<a class="ct" href="' + esc(k[2]) + '" target="_blank" rel="noopener">' + esc(k[0]) + '</a>';
+            return k[2]
+              ? '<a class="ct" href="' + esc(k[2]) + '" target="_blank" rel="noopener noreferrer">' + esc(k[0]) + '</a>'
+              : '<span class="ct">' + esc(k[0]) + ': ' + esc(k[1]) + '</span>';
           }).join('')
         + '</div></div>'
       : '';
@@ -1683,10 +1705,11 @@
     if (kind === 'x') return 'https://x.com/' + encodeURIComponent(handle);
     if (kind === 'insta') return 'https://instagram.com/' + encodeURIComponent(handle);
     if (kind === 'discord') {
-      if (/discord\.(gg|com)/i.test(v)) return 'https://' + v.replace(/^https?:\/\//, '');
+      if (/^discord\.(gg|com)\//i.test(v)) return 'https://' + v;
       return 'https://discord.com/users/' + encodeURIComponent(handle);
     }
-    return /^[\w.-]+\.[a-z]{2,}/i.test(v) ? 'https://' + v : v;
+    /* url/market: only link if it looks like a bare domain — never pass through e.g. javascript: */
+    return /^[\w.-]+\.[a-z]{2,}([\/?#]|$)/i.test(v) ? 'https://' + v : '';
   }
 
   /* ---------- lightbox (view an exhibit large) ---------- */
@@ -1696,7 +1719,7 @@
     var st = i.status || 'owned', cat = i.category || 'other';
     var bcls = badgeClass(st);
     var cut = isCutout(i.photo);
-    var inner = i.photo ? '<img class="' + (cut ? fxClass(i.fx || 'sticker') : '') + '"' + (cut ? fxStyleAttr(i) : '') + ' src="' + i.photo + '" alt="">' : medallion(cat);
+    var inner = i.photo ? '<img class="' + (cut ? fxClass(i.fx || 'sticker') : 'plainphoto') + '"' + (cut ? fxStyleAttr(i) : '') + ' src="' + i.photo + '" alt="">' : medallion(cat);
     document.getElementById('lb-stage').innerHTML = inner;
     var priceStr = Number(i.price) ? fmtMoney(i.price, i.currency) : (st === 'want' ? esc(stLabel('want')) : '—');
     document.getElementById('lb-plaque').innerHTML =

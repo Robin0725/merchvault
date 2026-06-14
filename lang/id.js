@@ -111,5 +111,6 @@ window.MV_LANG['id'] = {
   footFamily: 'Bagian dari keluarga alat sekali beli:',
   scTitle: 'Koleksiku',
   scItems: '{n} item',
-  addFirst: 'Tambahkan beberapa item dulu.'
+  addFirst: 'Tambahkan beberapa item dulu.',
+  storageFull: 'Penyimpanan perangkat ini penuh — gagal menyimpan. Ekspor cadangan CSV, lalu hapus beberapa foto atau item untuk melegakan ruang.',
 };

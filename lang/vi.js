@@ -111,5 +111,6 @@ window.MV_LANG['vi'] = {
   footFamily: 'Một phần của bộ công cụ mua một lần:',
   scTitle: 'Bộ sưu tập của tôi',
   scItems: '{n} món',
-  addFirst: 'Hãy thêm vài món trước.'
+  addFirst: 'Hãy thêm vài món trước.',
+  storageFull: 'Bộ nhớ thiết bị đã đầy — không lưu được. Hãy xuất bản sao CSV rồi xóa bớt vài ảnh hoặc món để giải phóng dung lượng.',
 };

@@ -111,5 +111,6 @@ window.MV_LANG['ko'] = {
   footFamily: '한 번 사면 끝인 도구 패밀리의 일부입니다:',
   scTitle: '내 컬렉션',
   scItems: '{n}개',
-  addFirst: '먼저 항목을 몇 개 추가해 주세요.'
+  addFirst: '먼저 항목을 몇 개 추가해 주세요.',
+  storageFull: '이 기기의 저장 공간이 가득 찼어요 — 저장하지 못했어요. CSV로 백업한 뒤 사진이나 항목을 좀 지워 공간을 확보하세요.',
 };

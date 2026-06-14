@@ -111,5 +111,6 @@ window.MV_LANG['es'] = {
   footFamily: 'Parte de una familia de herramientas de pago único:',
   scTitle: 'Mi colección',
   scItems: '{n} piezas',
-  addFirst: 'Añade primero algunas piezas.'
+  addFirst: 'Añade primero algunas piezas.',
+  storageFull: 'El almacenamiento de este dispositivo está lleno — no se pudo guardar. Exporta una copia CSV y borra algunas fotos o piezas para liberar espacio.',
 };

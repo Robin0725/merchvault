@@ -111,5 +111,6 @@ window.MV_LANG['de'] = {
   footFamily: 'Teil einer Familie von Einmalkauf-Tools:',
   scTitle: 'Meine Sammlung',
   scItems: '{n} Stücke',
-  addFirst: 'Füge zuerst ein paar Stücke hinzu.'
+  addFirst: 'Füge zuerst ein paar Stücke hinzu.',
+  storageFull: 'Der Speicher dieses Geräts ist voll — konnte nicht speichern. Exportiere ein CSV-Backup und entferne ein paar Fotos oder Stücke, um Platz zu schaffen.',
 };
