@@ -355,6 +355,40 @@
   .photo-prev-lg.has { border-color: transparent; }
   .pz-hint { font-size: 12.5px; color: var(--muted); font-weight: 600; }
   .photo-actions { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+
+  /* sticker stroke around cut-outs — hides the mask's jagged fringe + reads as an exhibit edge */
+  .cut {
+    filter:
+      drop-shadow(1.6px 0 0 #fff7ec) drop-shadow(-1.6px 0 0 #fff7ec)
+      drop-shadow(0 1.6px 0 #fff7ec) drop-shadow(0 -1.6px 0 #fff7ec)
+      drop-shadow(0 8px 14px rgba(0,0,0,.42))
+      drop-shadow(0 0 12px rgba(255,200,140,.42));
+  }
+
+  /* lightbox: tap an exhibit to view it large, museum-style */
+  .lb .lb-inner { max-width: 560px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px; position: relative; }
+  .lb-close {
+    position: absolute; top: -6px; inset-inline-end: -2px; width: 38px; height: 38px; border-radius: 999px;
+    background: rgba(255,250,241,.14); color: #fff; border: 1px solid rgba(255,250,241,.3);
+    font-size: 22px; line-height: 1; cursor: pointer; z-index: 2;
+  }
+  .lb-close:hover { background: rgba(255,250,241,.24); }
+  .lb-stage {
+    width: 100%; max-width: 420px; aspect-ratio: 4 / 5; border-radius: 20px; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(circle at 50% 16%, rgba(255,244,224,.34), transparent 56%),
+      linear-gradient(160deg, #2c2521, #14100e);
+    box-shadow: inset 0 0 0 1px rgba(181,138,69,.32), inset 0 -40px 60px -28px rgba(0,0,0,.7), 0 0 40px rgba(181,138,69,.18);
+  }
+  .lb-stage img { max-width: 90%; max-height: 90%; object-fit: contain; }
+  .lb-stage .art-mark { width: 52%; }
+  .lb-plaque { text-align: center; color: #fff7ec; max-width: 440px; }
+  .lb-plaque .lp-name { font-size: 22px; font-weight: 820; letter-spacing: -.3px; }
+  .lb-plaque .lp-series { color: rgba(255,247,236,.72); font-size: 14px; margin-top: 2px; }
+  .lb-plaque .lp-meta { margin-top: 12px; display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; }
+  .lb-plaque .lp-price { font-size: 18px; font-weight: 820; }
+  .lb-plaque .lp-edit { margin-top: 14px; }
 </style>
 </head>
 <body>
@@ -506,6 +540,15 @@
     <p style="font-size:14px" data-i18n="privP2">That also means: if you clear your browser data or switch devices, your collection doesn't follow automatically. Use the CSV export to keep your own backup.</p>
     <p class="note" data-i18n="privP3">We use a privacy-friendly visit counter (GoatCounter) that records page views without cookies or personal data.</p>
     <div class="modal-actions"><div class="spacer"></div><button class="btn primary" data-i18n="gotIt" onclick="closePrivacy()">Got it</button></div>
+  </div>
+</div>
+
+<!-- Lightbox (tap an exhibit to view it large) -->
+<div class="modal-bg lb" id="lightbox" onclick="if(event.target===this)closeLightbox()">
+  <div class="lb-inner">
+    <button class="lb-close" onclick="closeLightbox()" aria-label="Close">×</button>
+    <div class="lb-stage" id="lb-stage"></div>
+    <div class="lb-plaque" id="lb-plaque"></div>
   </div>
 </div>
 
@@ -776,7 +819,7 @@
     var thumb;
     if (i.photo) {
       thumb = (i.photo.indexOf('data:image/png') === 0)
-        ? '<div class="thumb lit"><img src="' + i.photo + '" alt=""></div>'   /* cutout → spotlit niche + edge glow */
+        ? '<div class="thumb lit"><img class="cut" src="' + i.photo + '" alt=""></div>'   /* cutout → spotlit niche + sticker stroke */
         : '<div class="thumb" style="background-image:url(' + i.photo + ')"></div>';
     } else {
       thumb = '<div class="thumb ph">' + medallion(cat) + '</div>';
@@ -786,7 +829,7 @@
       : '<span class="price">' + (Number(i.price) ? fmtMoney(i.price, i.currency) : '—') + '</span>';
     var fav = i.favorite ? '<div class="fav-star" style="right:9px">★</div>' : '';
     var isDup = dups[dupKey(i)] ? '<div class="dup-flag">' + esc(t('dupWord').toUpperCase()) + '</div>' : '';
-    return '<div class="card" onclick="openEdit(\'' + i.id + '\')">'
+    return '<div class="card" onclick="openLightbox(\'' + i.id + '\')">'
       + thumb
       + '<div class="cat-tag">' + esc(catShort(cat)) + '</div>'
       + fav
@@ -802,8 +845,9 @@
   function centerpieceHTML(i) {
     var st = i.status || 'owned', cat = i.category || 'other';
     var bcls = st === 'owned' ? 'b-owned' : (st === 'transit' ? 'b-transit' : 'b-want');
-    var inner = i.photo ? '<img class="cp-img" src="' + i.photo + '" alt="">' : medallion(cat);
-    var stage = '<div class="cp-stage' + (i.photo ? ' has-photo' : '') + '" onclick="openEdit(\'' + i.id + '\')">' + inner + '</div>';
+    var cut = i.photo && i.photo.indexOf('data:image/png') === 0;
+    var inner = i.photo ? '<img class="cp-img' + (cut ? ' cut' : '') + '" src="' + i.photo + '" alt="">' : medallion(cat);
+    var stage = '<div class="cp-stage' + (i.photo ? ' has-photo' : '') + '" onclick="openLightbox(\'' + i.id + '\')">' + inner + '</div>';
     var priceStr = Number(i.price) ? fmtMoney(i.price, i.currency) : (st === 'want' ? esc(stLabel('want')) : '—');
     return '<div class="cp">'
       + stage
@@ -975,6 +1019,34 @@
     try { if (window.caches && caches.keys) { caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }); } } catch (e) {}
     try { localStorage.removeItem(BG_READY); } catch (e) {}
   }
+  /* Wipe the faint semi-transparent halo the model leaves at the edges, so the sticker stroke sits clean. */
+  function cleanCutout(blob) {
+    return new Promise(function (res) {
+      var url = URL.createObjectURL(blob);
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var c = document.createElement('canvas');
+          c.width = img.width; c.height = img.height;
+          var x = c.getContext('2d');
+          x.drawImage(img, 0, 0);
+          var d = x.getImageData(0, 0, c.width, c.height), a = d.data;
+          for (var i = 3; i < a.length; i += 4) { if (a[i] < 24) a[i] = 0; }
+          x.putImageData(d, 0, 0);
+          URL.revokeObjectURL(url);
+          res(c.toDataURL('image/png'));
+        } catch (e) {
+          URL.revokeObjectURL(url);
+          var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.readAsDataURL(blob);
+        }
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.readAsDataURL(blob);
+      };
+      img.src = url;
+    });
+  }
   function removeBg() {
     if (!pendingPhoto || bgBusy) return;
     var ready = false;
@@ -1004,12 +1076,7 @@
     });
     var timeoutP = new Promise(function (_, rej) { to = setTimeout(function () { rej(new Error('timeout')); }, 360000); });
     Promise.race([work, timeoutP]).then(function (blob) {
-      return new Promise(function (res, rej) {
-        var fr = new FileReader();
-        fr.onload = function () { res(fr.result); };
-        fr.onerror = rej;
-        fr.readAsDataURL(blob);
-      });
+      return cleanCutout(blob);
     }).then(function (dataUrl) {
       try { localStorage.setItem(BG_READY, '1'); } catch (e) {}
       pendingPhoto = dataUrl;
@@ -1122,7 +1189,30 @@
   function openPrivacy() { document.getElementById('privacyModal').classList.add('show'); }
   function closePrivacy() { document.getElementById('privacyModal').classList.remove('show'); }
 
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeItem(); closePro(); closePrivacy(); } });
+  /* ---------- lightbox (view an exhibit large) ---------- */
+  function openLightbox(id) {
+    var i = items.filter(function (x) { return x.id === id; })[0];
+    if (!i) return;
+    var st = i.status || 'owned', cat = i.category || 'other';
+    var bcls = st === 'owned' ? 'b-owned' : (st === 'transit' ? 'b-transit' : 'b-want');
+    var cut = i.photo && i.photo.indexOf('data:image/png') === 0;
+    var inner = i.photo ? '<img class="' + (cut ? 'cut' : '') + '" src="' + i.photo + '" alt="">' : medallion(cat);
+    document.getElementById('lb-stage').innerHTML = inner;
+    var priceStr = Number(i.price) ? fmtMoney(i.price, i.currency) : (st === 'want' ? esc(stLabel('want')) : '—');
+    document.getElementById('lb-plaque').innerHTML =
+      (i.favorite ? '<div style="color:#e7b53f;font-weight:800;font-size:12px;letter-spacing:.4px;margin-bottom:4px">★ ' + esc(t('featuredLabel')) + '</div>' : '')
+      + '<div class="lp-name">' + esc(i.name || t('untitled')) + '</div>'
+      + (i.series ? '<div class="lp-series">' + esc(i.series) + '</div>' : '')
+      + '<div class="lp-meta"><span class="lp-price">' + priceStr + '</span>'
+      + '<span class="badge ' + bcls + '">' + esc(stLabel(st)) + '</span>'
+      + '<span class="cat-tag" style="position:static;background:rgba(255,250,241,.16)">' + esc(catShort(cat)) + '</span></div>'
+      + '<div class="lp-edit"><button class="btn ghost" onclick="lbEdit(\'' + i.id + '\')">' + esc(t('editHint')) + '</button></div>';
+    document.getElementById('lightbox').classList.add('show');
+  }
+  function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
+  function lbEdit(id) { closeLightbox(); openEdit(id); }
+
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeItem(); closePro(); closePrivacy(); closeLightbox(); } });
 
   /* ---------- boot ---------- */
   CUR_LANG = resolveLang();
